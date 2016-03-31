@@ -1,0 +1,23 @@
+{
+  "name": "package",
+  "version": "1.0.0",
+  "description": "Buy one Get one ",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "Express",
+    "Mongoose"
+  ],
+  "author": "Whistle",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "restify": "^4.0.4",
+    "lodash" : "^4.6.1",
+    "express": "^4.13.3",
+    "mongoose": "^4.2.9"
+  }
+}
