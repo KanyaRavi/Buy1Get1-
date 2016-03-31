@@ -64,13 +64,16 @@ var userSchema = new mongoose.Schema({
   },
   settings: {
     whistle: {
-      type: Boolean
+      type: Boolean,
+      default: true
     },
     radius:{
-      type: Number
+      type: Number,
+      default: 10
     },
     notification:{
-      type: Boolean
+      type: Boolean,
+      default: true
     },
     expiry:{
       type: Number,
