@@ -324,15 +324,25 @@ exports.logout = function(req, res, next) {
      exports.updateById = updateById;
 
   exports.changePassword = function(req, res, next){
-  var incomingUser = req.user;
-  var user = req.body.user;
-  if (typeof user.new === 'undefined' || user.new === "") {
-    res.send(new Response.respondWithData("New password is missing"));
-    return next();
-  }
-
-  User.findById(user.id, function(err, user){
+  var id = req.params.id;
+  var password = req.body.password;
+  console.log("got details");
+  User.findById(id, function(err, user){
     if(err){
+        res.send(new Response.respondWithData("Error looking up user"));
+        return next();
+      }
+  user.password = password;
+  user.save(function(err, user)
+  {
+   if(err) throw err;
+   console.log("pwd resetted");
+   res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
+    return next();
+   });
+ });
+}
+  /*  if(err){
       res.send(new Response.respondWithData("Error looking up user"));
       return next();
     } else if(user){
@@ -352,7 +362,7 @@ exports.logout = function(req, res, next) {
         } else {
           console.log("old pwd");
           res.send(new Response.respondWithData('failed', 'Old password incorrect'));
-          return next();
+            return next();
         }
     } else {
       console.log("incorrect mail");
@@ -361,3 +371,4 @@ exports.logout = function(req, res, next) {
     }
   })
 }
+*/
