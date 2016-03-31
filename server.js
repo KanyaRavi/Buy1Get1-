@@ -45,8 +45,8 @@ app.get('/' + process.env.LOADERIO_TOKEN + '.txt', function (req, res) {
   return res.send(process.env.LOADERIO_TOKEN);
 });
 
-console.log("Starting up the server");
-console.log("Connecting to MongoDB");
+log.info("Starting up the server");
+log.info("Connecting to MongoDB");
 
 function start(cb) {
   cb = cb || function(err){
@@ -57,14 +57,14 @@ function start(cb) {
   var m = db.connect(function (err) {
     if (err) {
       throw err;
-        console.log(err);
+        log.info(err);
       process.exit(-1);
     }
 
     // Initialize the database
     db.init(function (err) {
       if (err) {
-        console.log("Error initializing DB");
+      log.info("Error initializing DB");
         process.exit(-1);
       }
 
@@ -75,7 +75,7 @@ function start(cb) {
       require("./route")(app);
 
       app.listen(process.env.PORT || 3000, function (err) {
-        console.log(" %s listening at %s", app.name, app.url);
+        log.info(" %s listening at %s", app.name, app.url);
         cb(err);
       });
     });
@@ -88,9 +88,9 @@ if (module.parent) {
 }
 
 module.exports.cleanup = function() {
-    console.log("Worker PID#" + process.pid + " stop accepting new connections");
+    log.info("Worker PID#" + process.pid + " stop accepting new connections");
     app.close(function (err) {
-      console.log("Worker PID#" + process.pid + " shutting down!!!");
+      log.info("Worker PID#" + process.pid + " shutting down!!!");
       process.send({cmd: 'suicide'});
     });
 }

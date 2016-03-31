@@ -11,7 +11,7 @@ var notifications = require('./notifications.js');
 
 exports.signup = function (req, res, next) {
   var registeringUser = req.params.user;
-
+  console.log("got data");
   if(typeof registeringUser.phone == 'undefined' || registeringUser.phone == ''){
     res.status(400).send('phone is missing');
     return next();
@@ -22,7 +22,7 @@ exports.signup = function (req, res, next) {
       return next();
     }
   }
-  
+
   User.findOne(
      { 'phone': registeringUser.phone }
    ).exec(function(err, existingUser){
@@ -35,11 +35,13 @@ exports.signup = function (req, res, next) {
        if (err) {
          errors.processError(err, req, res);
        } else {
+         console.log("creating");
          newUser.createSession(function (err, loggedInUser) {
            if (err) {
              res.send(new restify.InternalError("Error logging in the new user: " + err.message));
              return next();
            } else {
+             console.log("added user");
              res.send(200, {newUser: loggedInUser});
              return next();
            }
@@ -61,6 +63,7 @@ exports.login = function (req, res, next) {
       return next();
     } else {
       if (user) {
+        console.log("login sucess");
         res.send({user: user});
         return next();
       } else {
@@ -113,6 +116,7 @@ exports.logout = function(req, res, next) {
     if (err) {
       return next(new restify.InternalError(err));
     } else {
+      console.log("logout success");
       next(res.send(200));
       return next();
     }
@@ -282,6 +286,7 @@ exports.logout = function(req, res, next) {
          if (err) {
            errors.processError(err, req, res);
          } else {
+           console.log("updated!");
            res.send(200, {user: user});
            return next();
          }
@@ -339,15 +344,18 @@ exports.logout = function(req, res, next) {
             res.send(new Response.respondWithData('failed', 'Error updating password'));
             return next();
           } else {
+            console.log("pwd resetted");
             res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
             return next();
           }
         })
         } else {
+          console.log("old pwd");
           res.send(new Response.respondWithData('failed', 'Old password incorrect'));
           return next();
         }
     } else {
+      console.log("incorrect mail");
       res.send(new Response.respondWithData('failed', 'Incorrect Email'));
       return next();
     }
