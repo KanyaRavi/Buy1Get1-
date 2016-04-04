@@ -1,4 +1,5 @@
 var authController = require('./controllers/auth.js');
+var dealController = require('./controllers/deals.js');
 var path = require('path');
 var restify = require('restify');
 
@@ -8,13 +9,17 @@ module.exports = function (app){
     res.send(200, {Welcome: true});
   });
 
-  app.post('/api/signup',authController.signup);
-  app.post('/api/login',authController.login);
-  app.del('/api/logout',needsAuth,authController.logout);
-  app.post('/api/sociallogin',authController.socialLogin);
-  app.post('/api/forgotpassword',authController.forgotPassword);
-  app.post('/api/updateprofile', needsAuth, authController.updateProfile);
-  app.post('/api/changepassword/:id',authController.changePassword);
+  app.post('/api/user/signup',authController.signup);
+  app.post('/api/user/login',authController.login);
+  app.del('/api/user/logout',needsAuth,authController.logout);
+  app.post('/api/user/sociallogin',authController.socialLogin);
+  app.post('/api/user/forgotpassword',authController.forgotPassword);
+  app.post('/api/user/updateprofile', needsAuth, authController.updateProfile);
+  app.post('/api/user/changepassword/:id',authController.changePassword);
+  app.post('/api/user/settingsupdate',needsAuth,authController.settingsUpdate);
+  app.post('/api/deal/gethistory/:id',needsAuth,dealController.getHistory);
+  app.post('/api/deal/updatedeal/:id', needsAuth, dealController.updateDeal);
+  app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
 }
 
 function needsAuth(req, res, next) {

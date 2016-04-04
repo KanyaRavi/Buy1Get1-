@@ -262,27 +262,27 @@ exports.logout = function(req, res, next) {
        })
      }
 
-     exports.updateProfile = function (req, res, next) {
+   exports.updateProfile = function (req, res, next) {
        var user = req.user;
-       var updatedUserProfile = req.params.user;
+       var updatedSettings = req.params.user;
 
        // Check if the updatedProfile is empty
-       if (!updatedUserProfile || Object.keys(updatedUserProfile).length === 0) {
+       if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
          console.log("Error: Empty or no object sent to update user.");
          res.send(new restify.InvalidArgumentError("Empty or no user data sent to udpate."));
          return next();
        }
 
-       if (typeof updatedUserProfile.location !== 'undefined') {
+       if (typeof updatedSettings.location !== 'undefined') {
          try {
-           updatedUserProfile.location = common.formatLocation(updatedUserProfile.location);
+           updatedSettings.location = common.formatLocation(updatedSettings.location);
          } catch (e) {
            res.send(new restify.InvalidArgumentError(e.message));
            return next();
          }
        }
 
-       user.update(updatedUserProfile, function(err, user) {
+       user.update(updatedSettings, function(err, user) {
          if (err) {
            errors.processError(err, req, res);
          } else {
@@ -342,33 +342,64 @@ exports.logout = function(req, res, next) {
    });
  });
 }
-  /*  if(err){
-      res.send(new Response.respondWithData("Error looking up user"));
-      return next();
-    } else if(user){
-        if(user.password == user.old){
-          User.update({'_id':user.id},{
-          password: user.new
-        }, function(err, result){
-          if(err){
-            res.send(new Response.respondWithData('failed', 'Error updating password'));
-            return next();
-          } else {
-            console.log("pwd resetted");
-            res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
-            return next();
-          }
-        })
-        } else {
-          console.log("old pwd");
-          res.send(new Response.respondWithData('failed', 'Old password incorrect'));
-            return next();
-        }
-    } else {
-      console.log("incorrect mail");
-      res.send(new Response.respondWithData('failed', 'Incorrect Email'));
+
+
+exports.settingsUpdate = function (req, res, next) {
+  var user = req.user;
+  var updatedSettings = req.params.user;
+
+  // Check if the updatedsettings is empty
+  if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
+    console.log("Error: Empty or no object sent to update user.");
+    res.send(new restify.InvalidArgumentError("Empty or no user data sent to udpate."));
+    return next();
+  }
+
+  if (typeof updatedSettings.location !== 'undefined') {
+    try {
+      updatedSettings.location = common.formatLocation(updatedSettings.location);
+    } catch (e) {
+      res.send(new restify.InvalidArgumentError(e.message));
       return next();
     }
-  })
-}
-*/
+  }
+
+  user.update(updatedSettings, function(err, user) {
+    if (err) {
+      errors.processError(err, req, res);
+    } else {
+      res.send(200, {user: user});
+      return next();
+    }
+  });
+};
+
+var updateById = function (userId, updates, callback) {
+
+  req.db.mongoose.model("user").findById(userId, function(err, user) {
+    Object.keys(updates).forEach(function(item) {
+      // Some properties cannot be modified this way
+      /* @TODO Should this disallow other properties from being updated?
+       *
+      var immutableProperties = ['accessToken', 'password', 'lastLogin'];
+      if (immutableProperties.indexOf(item) !== -1){
+        return;
+      }
+
+      // Others can be modified
+       */
+      user[item] = updates[item];
+    });
+
+    user.save(function(err, user) {
+      if (callback) {
+        callback(err, user);
+      } else if (err) {
+        return false;
+      } else {
+        return true;
+      }
+    });
+  });
+};
+exports.updateById = updateById;

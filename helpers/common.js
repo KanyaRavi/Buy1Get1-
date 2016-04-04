@@ -30,3 +30,21 @@ function generateCode(){
 }
 
 exports.generateCode = generateCode;
+
+//Location Validate
+exports.formatLocation = function (location) {
+  // If location is empty
+  if (!location) {
+    location = [0, 0];
+  } else {
+    // Does location contain coordinates property?
+    if ('undefined' !== typeof location.coordinates) {
+      location = location.coordinates;
+    }
+    // Is location an array with two values?
+    if (!(Array.isArray(location) && location.length === 2)) {
+      throw new Error("Incorrect location format: " + location);
+    }
+  }
+  return { "type": "Point", "coordinates": location };
+};

@@ -18,7 +18,7 @@ var dealSchema = new mongoose.Schema({
   },
   start:{
     type: Date,
-    default: Date.now()
+    default: Date.now
   },
   end:{
     type: Date
@@ -36,7 +36,33 @@ var dealSchema = new mongoose.Schema({
     type:mongoose.Schema.Types.ObjectId, ref: 'user'
   }
 });
+// Virtuals
+/*dealSchema.virtual('start').get(function () {
+  return this.start.getTime();
+});*/
 
+dealSchema.set('toObject', { virtuals: true });
+dealSchema.set('toJSON', { virtuals: true });
+
+dealSchema.methods.toJSON = function () {
+  return {
+    _id: this.id,
+    shopName: this.shopName,
+    deal: this.deal,
+    price: this.price,
+    start: this.start,
+    end: this.end,
+    expiry: this.expiry,
+    accepted: this.accepted,
+    rejected: this.rejected,
+  };
+};
+dealSchema.pre('save', function(next) {
+
+  next();
+});
+
+/*User Schema*/
 
 var userSchema = new mongoose.Schema({
   name: {
@@ -83,7 +109,7 @@ var userSchema = new mongoose.Schema({
   deals: [dealSchema],
   createdAt: {
     type: Date,
-    default: Date.now()
+    default: Date.now
   },
   accessToken:{
     type:String
@@ -218,4 +244,5 @@ userSchema.pre('save', function (next) {
   next(err);
 });
 
+mongoose.model('deals', dealSchema);
 mongoose.model('user', userSchema);
