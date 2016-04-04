@@ -16,23 +16,15 @@ app.use(function(req, res, next) {
 
 app.use(restify.queryParser());
 app.use(restify.bodyParser());
-// Create a bunyan based logger
+
 var log = bunyan.createLogger({
   name: 'Buy1Get1',
-  streams: [
-    {
-      level: 'debug',
-      stream: process.stdout
-    }
-  ],
   serializers: bunyan.stdSerializers
 });
 
 // Attach the logger to the restify server
 app.log = log;
 
-
- // Emitted after a route has finished all the handlers
 app.on('after', function (req, res, route, error) {
   req.log.debug("%s %s", req.method, req.url);
   req.log.debug("%s %s", req.headers['Authorization'], req.headers['user-agent']);
@@ -40,13 +32,27 @@ app.on('after', function (req, res, route, error) {
   req.log.debug("%d %s", res.statusCode, res._data ? res._data.length : null);
 });
 
+app.get('/testclient', function (req, res, next) {
+  require('fs').readFile(__dirname + '/public/index.html', function (err, data) {
+    if (err) {
+      next(err);
+      return;
+    }
+
+    res.setHeader('Content-Type', 'text/html');
+    res.writeHead(200);
+    res.end(data);
+    next();
+  });
+});
+
 app.get('/' + process.env.LOADERIO_TOKEN + '.txt', function (req, res) {
   res.setHeader('Content-Type', 'text/plain');
   return res.send(process.env.LOADERIO_TOKEN);
 });
 
-log.info("Starting up the server");
-log.info("Connecting to MongoDB");
+console.log("Starting up the server");
+console.log("Connecting to MongoDB");
 
 function start(cb) {
   cb = cb || function(err){
@@ -56,15 +62,14 @@ function start(cb) {
   };
   var m = db.connect(function (err) {
     if (err) {
-      throw err;
-        log.info(err);
+      log.error(err);
       process.exit(-1);
     }
 
     // Initialize the database
     db.init(function (err) {
       if (err) {
-      log.info("Error initializing DB");
+        log.error("Error initializing DB");
         process.exit(-1);
       }
 
@@ -72,10 +77,16 @@ function start(cb) {
         req.db = m;
         next();
       });
+      // Load the routes
       require("./route")(app);
+/*/
+      //probable source of memleaks by manifold `setTimeout`s
+      scheduler.init();
+//*/
+      // ... and ... ACTION!
 
       app.listen(process.env.PORT || 3000, function (err) {
-        log.info(" %s listening at %s", app.name, app.url);
+        console.log("Server %s listening at %s", app.name, app.url);
         cb(err);
       });
     });
@@ -88,9 +99,9 @@ if (module.parent) {
 }
 
 module.exports.cleanup = function() {
-    log.info("Worker PID#" + process.pid + " stop accepting new connections");
+    console.log("Worker PID#" + process.pid + " stop accepting new connections");
     app.close(function (err) {
-      log.info("Worker PID#" + process.pid + " shutting down!!!");
+      console.log("Worker PID#" + process.pid + " shutting down!!!");
       process.send({cmd: 'suicide'});
     });
 }

@@ -17,9 +17,10 @@ exports.getHistory = function (req, res, next) {
   if (req.params.id) {
     // Validate the id
     var id = req.params.id;
+    console.log("got id");
     User.findOne({ 'deals._id': id })
       .exec(function (err, user) {
-        //console.log(user);
+        console.log(user);
       if (err) {
         return next(new Response.respondWithData('failed','Cant find the user'));
       }
@@ -36,7 +37,7 @@ exports.getHistory = function (req, res, next) {
 exports.updateDeal = function(req, res, next){
   var user = req.user;
   var updatedDeal = req.params.user;
-
+  console.log("got ");
   // Check if the updatedProfile is empty
   if (!updatedDeal || Object.keys(updatedDeal).length === 0) {
     console.log("Error: Empty or no object sent to update user.");
@@ -48,6 +49,7 @@ exports.updateDeal = function(req, res, next){
     try {
       updatedDeal.location = common.formatLocation(updatedDeal.location);
     } catch (e) {
+      console.log("invalid location");
       res.send(new Response.respondWithData(e.message));
       return next();
     }
@@ -57,6 +59,7 @@ exports.updateDeal = function(req, res, next){
     if (err) {
       errors.processError(err, req, res);
     } else {
+      console.log("deal update");
       res.send(200, {user: user});
       return next();
     }
@@ -97,6 +100,7 @@ exports.updateById = updateById;
 exports.deleteDeal = function (req, res, next) {
   // Delete a Deal by its id
   var dealId = req.params.dealId;
+  console.log("got id");
   req.user.deals.pull(dealId);
   req.user.save(function (err, user) {
     if (err) {
@@ -104,6 +108,7 @@ exports.deleteDeal = function (req, res, next) {
       res.send(new Response.respondWithData(err.message));
       return next();
     }
+    console.log("deal deleted");
      res.send(new Response.respondWithData("success","Deleted deal"));
     return next();
   });

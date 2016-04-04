@@ -265,11 +265,11 @@ exports.logout = function(req, res, next) {
    exports.updateProfile = function (req, res, next) {
        var user = req.user;
        var updatedSettings = req.params.user;
-
+       console.log("Got ip");
        // Check if the updatedProfile is empty
        if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
          console.log("Error: Empty or no object sent to update user.");
-         res.send(new restify.InvalidArgumentError("Empty or no user data sent to udpate."));
+         res.send(new restify.InvalidArgumentError("failed","Empty or no user data sent to udpate."));
          return next();
        }
 
@@ -277,6 +277,7 @@ exports.logout = function(req, res, next) {
          try {
            updatedSettings.location = common.formatLocation(updatedSettings.location);
          } catch (e) {
+           console.log("invalid location");
            res.send(new restify.InvalidArgumentError(e.message));
            return next();
          }
@@ -300,7 +301,7 @@ exports.logout = function(req, res, next) {
            // Some properties cannot be modified this way
            /* @TODO Should this disallow other properties from being updated?
             *
-           var immutableProperties = ['accessToken', 'password', 'lastLogin'];
+           var immutableProperties = ['accessToken', 'password];
            if (immutableProperties.indexOf(item) !== -1){
              return;
            }
@@ -347,7 +348,7 @@ exports.logout = function(req, res, next) {
 exports.settingsUpdate = function (req, res, next) {
   var user = req.user;
   var updatedSettings = req.params.user;
-
+  console.log("got ip");
   // Check if the updatedsettings is empty
   if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
     console.log("Error: Empty or no object sent to update user.");
@@ -359,6 +360,7 @@ exports.settingsUpdate = function (req, res, next) {
     try {
       updatedSettings.location = common.formatLocation(updatedSettings.location);
     } catch (e) {
+      console.log("invalid location");
       res.send(new restify.InvalidArgumentError(e.message));
       return next();
     }
@@ -368,6 +370,7 @@ exports.settingsUpdate = function (req, res, next) {
     if (err) {
       errors.processError(err, req, res);
     } else {
+      console.log("settings updated");
       res.send(200, {user: user});
       return next();
     }
