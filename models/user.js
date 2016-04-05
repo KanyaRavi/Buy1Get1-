@@ -119,7 +119,17 @@ var userSchema = new mongoose.Schema({
       },
   googleId:{
         type: String
-      }
+      },
+  regId: {
+   type: String
+ },
+ passwordResetKey: {
+   type: String,
+   index: true,
+   unique: true,
+   sparse: true //http://stackoverflow.com/a/21211640/1885921
+ },
+ passwordKeyValidTill: Date
 }, {collection: 'user'});
 //Virtual properties
 userSchema.path('name').validate(function (value) {
@@ -194,6 +204,20 @@ userSchema.methods.toJSON = function () {
     facebookId : this.facebookId,
     googleId:this.googleId
   };
+};
+
+userSchema.methods.update = function (updates, options, cb) {
+  var userToUpdate = this;
+  if (typeof options !== 'object' && typeof options === 'function') {
+    cb = options;
+  }
+  var editableFields = ['name', 'email', 'phone', 'settings', 'deals', 'location',];
+  editableFields.forEach(function (field) {
+    if (typeof field === 'string' && updates[field] !== undefined) {
+      userToUpdate[field] = updates[field];
+    }
+  });
+  userToUpdate.save(cb);
 };
 
 userSchema.methods.createSession = function (cb) {

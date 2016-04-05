@@ -20,6 +20,8 @@ module.exports = function (app){
   app.post('/api/deal/gethistory/:id',needsAuth,dealController.getHistory);
   app.post('/api/deal/updatedeal/:id', needsAuth, dealController.updateDeal);
   app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
+  app.post('/api/user/passwordReset', authController.passwordReset);
+  app.post('/api/user/passwordResetReq', authController.PasswordResetReq);
 }
 
 function needsAuth(req, res, next) {

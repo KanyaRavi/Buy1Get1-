@@ -86,7 +86,7 @@ function start(cb) {
       // ... and ... ACTION!
 
       app.listen(process.env.PORT || 3000, function (err) {
-        console.log("Server %s listening at %s", app.name, app.url);
+        console.log(" %s listening at %s", app.name, app.url);
         cb(err);
       });
     });

@@ -58,6 +58,7 @@ exports.login = function (req, res, next) {
   var password = req.body.password;
 
   createNewSession(phone, password, function (err, user) {
+    console.log(user);
     if (err) {
       res.send(new restify.InvalidCredentialsError("Username/Password invalid."));
       return next();
@@ -67,7 +68,7 @@ exports.login = function (req, res, next) {
         res.send({user: user});
         return next();
       } else {
-        res.send(new restify.ResourceNotFoundError("User not found."));
+        res.send(new Response.respondWithData("User not found."));
         return next();
       }
     }
@@ -264,8 +265,12 @@ exports.logout = function(req, res, next) {
 
    exports.updateProfile = function (req, res, next) {
        var user = req.user;
-       var updatedSettings = req.params.user;
-       console.log("Got ip");
+       for(i=0;i<=2;i++){
+       var updatedSettings = req.body.user;
+       console.log(updatedSettings[0]);
+       console.log(updatedSettings[1]);
+     }
+       console.log(user +"Got ip" );
        // Check if the updatedProfile is empty
        if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
          console.log("Error: Empty or no object sent to update user.");
@@ -275,7 +280,7 @@ exports.logout = function(req, res, next) {
 
        if (typeof updatedSettings.location !== 'undefined') {
          try {
-           updatedSettings.location = common.formatLocation(updatedSettings.location);
+           user.location = common.formatLocation(updatedSettings.location);
          } catch (e) {
            console.log("invalid location");
            res.send(new restify.InvalidArgumentError(e.message));
@@ -324,7 +329,7 @@ exports.logout = function(req, res, next) {
      };
      exports.updateById = updateById;
 
-  exports.changePassword = function(req, res, next){
+/*  exports.changePassword = function(req, res, next){
   var id = req.params.id;
   var password = req.body.password;
   console.log("got details");
@@ -342,7 +347,7 @@ exports.logout = function(req, res, next) {
     return next();
    });
  });
-}
+}*/
 
 
 exports.settingsUpdate = function (req, res, next) {
@@ -384,7 +389,7 @@ var updateById = function (userId, updates, callback) {
       // Some properties cannot be modified this way
       /* @TODO Should this disallow other properties from being updated?
        *
-      var immutableProperties = ['accessToken', 'password', 'lastLogin'];
+      var immutableProperties = ['accessToken', 'password'];
       if (immutableProperties.indexOf(item) !== -1){
         return;
       }
@@ -406,3 +411,70 @@ var updateById = function (userId, updates, callback) {
   });
 };
 exports.updateById = updateById;
+
+
+exports.changePasswordReq = function(req, res, next){
+  var phone =req.params.phone;
+  var validDate =  new Date();
+  User
+    .findOne({'phone' : phone })
+    .exec(function(err, user) {
+      // Look up the user
+      if (err) {
+        console.log("User not found: " + err);
+        return next(new Response.respondWithData("Invalid user"));
+      } else {
+        var key = passwordKeyGen();
+        user.passwordResetKey=key;
+        user.passwordKeyValidTill = ticketDate.setDate(validDate.getDate() + 1);
+        user.save(function(err){
+          if (err) {
+            console.log("Error reset the key");
+            return next(new restify.InternalError("Error reset the key: " + err.message));
+          }
+          return next(res.send(200, {"key" :key, message: "Password has to be reset in 1 days"}));
+        });
+      }
+    });
+};
+
+function passwordKeyGen() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLM NOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for( var i=0; i < 4; i++ ) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+
+exports.passwordReset = function(req, res, next){
+
+  var passwordResetKey = req.params.passwordResetKey;
+  var newPassword = req.params.password;
+  var phone = req.params.phone;
+
+  User
+    .findOne({'phone' : phone  , "passwordKeyValidTill": {'$gte': Date.now()}})
+    .exec(function(err, user) {
+      if (err) {
+        console.log("User not found: " + err);
+        return next(new Response.respondWithData("User doesn't have password reset request"));
+      }
+      if (user.passwordResetKey !== passwordResetKey ) {
+        // Wrong key
+
+        console.log("Invalid key");
+        return next(new restify.InvalidArgumentError("Invalid key"));
+      } else {
+        user.password= newPassword;
+        user.save(function(err, user) {
+          if (err) {
+            console.log(user.passwordResetKey);
+            console.log(PasswordKey);
+            return next(new restify.InternalError("Unable to update password: " + err.message));
+          }
+          return next(res.send(200, {ok: true }));
+        });
+      }
+    });
+};
