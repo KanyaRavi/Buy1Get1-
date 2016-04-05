@@ -350,7 +350,7 @@ exports.logout = function(req, res, next) {
 }*/
 
 
-exports.settingsUpdate = function (req, res, next) {
+exports.settingsUpdate = function (req, res, next){
   var user = req.user;
   var updatedSettings = req.params.user;
   console.log("got ip");
@@ -426,7 +426,7 @@ exports.changePasswordReq = function(req, res, next){
       } else {
         var key = passwordKeyGen();
         user.passwordResetKey=key;
-        user.passwordKeyValidTill = ticketDate.setDate(validDate.getDate() + 1);
+        user.passwordKeyValidTill = validDate.setDate(validDate.getDate() + 1);
         user.save(function(err){
           if (err) {
             console.log("Error reset the key");
@@ -458,7 +458,7 @@ exports.passwordReset = function(req, res, next){
     .exec(function(err, user) {
       if (err) {
         console.log("User not found: " + err);
-        return next(new Response.respondWithData("User doesn't have password reset request"));
+        return next(new Response.respondWithData("failed","User doesn't have password reset request"));
       }
       if (user.passwordResetKey !== passwordResetKey ) {
         // Wrong key
@@ -471,7 +471,7 @@ exports.passwordReset = function(req, res, next){
           if (err) {
             console.log(user.passwordResetKey);
             console.log(PasswordKey);
-            return next(new restify.InternalError("Unable to update password: " + err.message));
+            return next(new restify.InternalError("failed","Unable to update password: " + err.message));
           }
           return next(res.send(200, {ok: true }));
         });
