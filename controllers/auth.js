@@ -329,26 +329,43 @@ exports.logout = function(req, res, next) {
      };
      exports.updateById = updateById;
 
-/*  exports.changePassword = function(req, res, next){
-  var id = req.params.id;
-  var password = req.body.password;
-  console.log("got details");
-  User.findById(id, function(err, user){
-    if(err){
-        res.send(new Response.respondWithData("Error looking up user"));
-        return next();
-      }
-  user.password = password;
-  user.save(function(err, user)
-  {
-   if(err) throw err;
-   console.log("pwd resetted");
-   res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
-    return next();
-   });
- });
-}*/
+     exports.changePassword = function(req, res, next){
+       var incomingUser = req.user;
+       var user = req.body.user;
+       console.log(incomingUser + "Got New" + user);
+       if (typeof user.new === 'undefined' || user.new === "") {
+         res.send(new Response.respondWithData("New password is missing"));
+         return next();
+       }
 
+       User.findById(user.id, function(err, data){
+         if(err){
+           res.send(new Response.respondWithData("Error looking up user"));
+           return next();
+         } else if(data){
+             if(data.password == user.old){
+               data.update({'_id':user.id},{
+               password: user.new
+             }, function(err, result){
+               if(err){
+                 res.send(new Response.respondWithData('failed', 'Error updating password'));
+                  return next();
+               } else {
+                 console.log(password+ " Changed" + user.old);
+                 res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
+                 return next();
+               }
+             })
+             } else {
+               res.send(new Response.respondWithData('failed', 'Old password incorrect'));
+               return next();
+             }
+         } else {
+           res.send(new Response.respondWithData('failed', 'Incorrect Email'));
+           return next();
+         }
+       })
+     }
 
 exports.settingsUpdate = function (req, res, next){
   var user = req.user;
@@ -357,7 +374,7 @@ exports.settingsUpdate = function (req, res, next){
   // Check if the updatedsettings is empty
   if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
     console.log("Error: Empty or no object sent to update user.");
-    res.send(new restify.InvalidArgumentError("Empty or no user data sent to udpate."));
+    res.send(new restify.InvalidArgumentError("Empty or no user data sent to update."));
     return next();
   }
 
@@ -375,7 +392,7 @@ exports.settingsUpdate = function (req, res, next){
     if (err) {
       errors.processError(err, req, res);
     } else {
-      console.log("settings updated");
+      console.log("settings updated"  + user);
       res.send(200, {user: user});
       return next();
     }

@@ -15,7 +15,7 @@ module.exports = function (app){
   app.post('/api/user/sociallogin',authController.socialLogin);
   app.post('/api/user/forgotpassword',authController.forgotPassword);
   app.post('/api/user/updateprofile', needsAuth, authController.updateProfile);
-//  app.post('/api/user/changepassword/:id',authController.changePassword);
+  app.post('/api/user/changepassword',authController.changePassword);
   app.post('/api/user/settingsupdate',needsAuth,authController.settingsUpdate);
   app.post('/api/deal/gethistory/:id',needsAuth,dealController.getHistory);
   app.post('/api/deal/updatedeal/:id', needsAuth, dealController.updateDeal);

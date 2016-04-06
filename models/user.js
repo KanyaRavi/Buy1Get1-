@@ -3,65 +3,6 @@ var path = require('path');
 var common = require('../helpers/common.js');
 var validator = require("validator");
 
-var dealSchema = new mongoose.Schema({
-  shopName: {
-    type: String,
-    required: true
-  },
-  deal: {
-    type: String,
-    required: true
-  },
-  price:{
-    type: Number,
-    required: true
-  },
-  start:{
-    type: Date,
-    default: Date.now
-  },
-  end:{
-    type: Date
-  },
-  expiry:{
-    type: Date
-  },
-  comments:{
-    type: String
-  },
-  accepted: {
-    type:mongoose.Schema.Types.ObjectId, ref:'user'
-  },
-  rejected: {
-    type:mongoose.Schema.Types.ObjectId, ref: 'user'
-  }
-});
-// Virtuals
-/*dealSchema.virtual('start').get(function () {
-  return this.start.getTime();
-});*/
-
-dealSchema.set('toObject', { virtuals: true });
-dealSchema.set('toJSON', { virtuals: true });
-
-dealSchema.methods.toJSON = function () {
-  return {
-    _id: this.id,
-    shopName: this.shopName,
-    deal: this.deal,
-    price: this.price,
-    start: this.start,
-    end: this.end,
-    expiry: this.expiry,
-    accepted: this.accepted,
-    rejected: this.rejected,
-  };
-};
-dealSchema.pre('save', function(next) {
-
-  next();
-});
-
 /*User Schema*/
 
 var userSchema = new mongoose.Schema({
@@ -88,6 +29,9 @@ var userSchema = new mongoose.Schema({
     index: '2dsphere',
     default:[0,0]
   },
+  deals:{
+    type: mongoose.Schema.Types.ObjectId, ref:'deal'
+  },
   settings: {
     whistle: {
       type: Boolean,
@@ -106,7 +50,6 @@ var userSchema = new mongoose.Schema({
       default: 24
     }
   },
-  deals: [dealSchema],
   createdAt: {
     type: Date,
     default: Date.now
@@ -193,6 +136,7 @@ userSchema.methods.toJSON = function () {
     name: this.name,
     phone: this.phone,
     email: this.email,
+    location: this.location,
     settings:{
       whistle: this.settings.whistle,
       radius: this.settings.radius,
@@ -211,7 +155,7 @@ userSchema.methods.update = function (updates, options, cb) {
   if (typeof options !== 'object' && typeof options === 'function') {
     cb = options;
   }
-  var editableFields = ['name', 'email', 'phone', 'settings', 'deals', 'location',];
+  var editableFields = ['name', 'email', 'phone', 'settings',  'location',];
   editableFields.forEach(function (field) {
     if (typeof field === 'string' && updates[field] !== undefined) {
       userToUpdate[field] = updates[field];
@@ -268,5 +212,4 @@ userSchema.pre('save', function (next) {
   next(err);
 });
 
-mongoose.model('deals', dealSchema);
 mongoose.model('user', userSchema);

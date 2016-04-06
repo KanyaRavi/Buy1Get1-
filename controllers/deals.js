@@ -5,6 +5,7 @@ var validator = require("validator");
 var path = require('path');
 var bcrypt = require('bcrypt-nodejs');
 var User = mongoose.model('user');
+var Deal = mongoose.model('deal');
 var bodyParser = require('body-parser');
 var Response = require('../helpers/response.js');
 var errors = require('../helpers/errors.js');
@@ -18,7 +19,7 @@ exports.getHistory = function (req, res, next) {
     // Validate the id
     var id = req.params.id;
     console.log("got id");
-    User.findOne({ 'deals._id': id })
+    Deal.findOne({ 'deals._id': id })
       .exec(function (err, user) {
         console.log(user);
       if (err) {
@@ -66,9 +67,9 @@ exports.updateDeal = function(req, res, next){
   });
 };
 
-var updateById = function (userId, updates, callback) {
+var updateById = function (dealId, updates, callback) {
 
-  req.db.mongoose.model("user").findById(userId, function(err, user) {
+  req.db.mongoose.model("deal").findById(dealId, function(err, user) {
     Object.keys(updates).forEach(function(item) {
       // Some properties cannot be modified this way
       /* @TODO Should this disallow other properties from being updated?
