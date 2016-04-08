@@ -15,13 +15,14 @@ module.exports = function (app){
   app.post('/api/user/sociallogin',authController.socialLogin);
   app.post('/api/user/forgotpassword',authController.forgotPassword);
   app.post('/api/user/updateprofile', needsAuth, authController.updateProfile);
-  app.post('/api/user/changepassword',authController.changePassword);
+  app.post('/api/user/changepassword',needsAuth,authController.changePassword);
   app.post('/api/user/settingsupdate',needsAuth,authController.settingsUpdate);
   app.post('/api/deal/gethistory/:id',needsAuth,dealController.getHistory);
   app.post('/api/deal/updatedeal/:id', needsAuth, dealController.updateDeal);
   app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
   app.post('/api/user/passwordReset', authController.passwordReset);
   app.post('/api/user/changePasswordReq', authController.changePasswordReq);
+  app.post('/api/deal/postdeal',needsAuth,dealController.postDeal);
 }
 
 function needsAuth(req, res, next) {

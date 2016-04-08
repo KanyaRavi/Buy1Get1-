@@ -1,9 +1,7 @@
 var mongoose = require('mongoose');
 var restify  = require('restify');
-var async    = require ('async');
 var validator = require("validator");
 var path = require('path');
-var bcrypt = require('bcrypt-nodejs');
 var User = mongoose.model('user');
 var Deal = mongoose.model('deal');
 var bodyParser = require('body-parser');
@@ -12,6 +10,27 @@ var errors = require('../helpers/errors.js');
 var common = require('../helpers/common.js');
 var notifications = require('./notifications.js');
 _ = require('lodash');
+
+
+exports.postDeal = function(req, res, next){
+  var Deal = mongoose.model('deal');
+  var dealObj = req.params.deal;
+  var user = req.user;
+  var newDeal = new Deal(dealObj);
+  console.log(dealObj);
+  user.deals.push(newDeal);
+
+  user.save(function (err, data) {
+     if (err) {
+       console.log("Error saving Deal");
+       return next(new restify.InternaError("Error in Deals. Try again. " + err.message));
+      } else {
+       console.log("Posted deal");
+       res.send(200, data);
+       return next();
+     }
+ })
+}
 
 
 exports.getHistory = function (req, res, next) {

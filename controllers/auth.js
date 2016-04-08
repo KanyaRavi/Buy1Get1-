@@ -329,43 +329,44 @@ exports.logout = function(req, res, next) {
      };
      exports.updateById = updateById;
 
-     exports.changePassword = function(req, res, next){
-       var incomingUser = req.user;
-       var user = req.body.user;
-       console.log(incomingUser + "Got New" + user);
-       if (typeof user.new === 'undefined' || user.new === "") {
-         res.send(new Response.respondWithData("New password is missing"));
+  exports.changePassword = function(req, res, next){
+    var incomingUser = req.user;
+    var user = req.body.user;
+    console.log(incomingUser + "Got new" + user);
+    if (typeof user.new === 'undefined' || user.new === "") {
+      res.send(new Response.respondWithData("New password is missing"));
+      return next();
+     }
+
+  User.findById(user.id, function(err, consumer){
+    console.log("got consumer:" +consumer);
+   if(err){
+      res.send(new Response.respondWithData("Error looking up user"));
+      return next();
+   } else if(consumer){
+        if(consumer.password == user.old){
+        User.update({'_id':user.id},{
+        password: user.new
+      }, function(err, result){
+          //console.log(password);
+           if(err){
+             res.send(new Response.respondWithData('failed', 'Error updating password'));
+            return next();
+           } else {
+             res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
+             return next();
+          }
+       })
+     } else {
+         res.send(new Response.respondWithData('failed', 'Old password incorrect'));
          return next();
        }
-
-       User.findById(user.id, function(err, data){
-         if(err){
-           res.send(new Response.respondWithData("Error looking up user"));
-           return next();
-         } else if(data){
-             if(data.password == user.old){
-               data.update({'_id':user.id},{
-               password: user.new
-             }, function(err, result){
-               if(err){
-                 res.send(new Response.respondWithData('failed', 'Error updating password'));
-                  return next();
-               } else {
-                 console.log(password+ " Changed" + user.old);
-                 res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
-                 return next();
-               }
-             })
-             } else {
-               res.send(new Response.respondWithData('failed', 'Old password incorrect'));
-               return next();
-             }
-         } else {
-           res.send(new Response.respondWithData('failed', 'Incorrect Email'));
-           return next();
-         }
-       })
-     }
+    } else {
+        res.send(new Response.respondWithData('failed', 'Incorrect Email'));
+        return next();
+   }
+    })
+ }
 
 exports.settingsUpdate = function (req, res, next){
   var user = req.user;
