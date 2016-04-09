@@ -431,8 +431,9 @@ var updateById = function (userId, updates, callback) {
 exports.updateById = updateById;
 
 
-exports.changePasswordReq = function(req, res, next){
-  var phone =req.params.phone;
+exports.forgotPasswordReq = function(req, res, next){
+  
+  var phone = req.params.phone;
   var validDate =  new Date();
   User
     .findOne({'phone' : phone })
@@ -440,10 +441,10 @@ exports.changePasswordReq = function(req, res, next){
       // Look up the user
       if (err) {
         console.log("User not found: " + err);
-        return next(new Response.respondWithData("Invalid user"));
+        return next(new Response.respondWithData('failed','Invalid user'));
       } else {
         var key = passwordKeyGen();
-        user.passwordResetKey=key;
+        user.passwordResetKey = key;
         user.passwordKeyValidTill = validDate.setDate(validDate.getDate() + 1);
         user.save(function(err){
           if (err) {

@@ -21,7 +21,7 @@ module.exports = function (app){
   app.post('/api/deal/updatedeal/:id', needsAuth, dealController.updateDeal);
   app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
   app.post('/api/user/passwordReset', authController.passwordReset);
-  app.post('/api/user/changePasswordReq', authController.changePasswordReq);
+  app.post('/api/user/forgotpasswordReq', authController.forgotPasswordReq);
   app.post('/api/deal/postdeal',needsAuth,dealController.postDeal);
 }
 
