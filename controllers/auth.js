@@ -432,9 +432,10 @@ exports.updateById = updateById;
 
 
 exports.forgotPasswordReq = function(req, res, next){
-  
+
   var phone = req.params.phone;
   var validDate =  new Date();
+  
   User
     .findOne({'phone' : phone })
     .exec(function(err, user) {
@@ -449,7 +450,7 @@ exports.forgotPasswordReq = function(req, res, next){
         user.save(function(err){
           if (err) {
             console.log("Error reset the key");
-            return next(new restify.InternalError("Error reset the key: " + err.message));
+            return next(new restify.InternalError("Error reset the key: "));
           }
           return next(res.send(200, {"key" :key, message: "Password has to be reset in 1 days"}));
         });
@@ -467,7 +468,7 @@ function passwordKeyGen() {
 }
 
 exports.passwordReset = function(req, res, next){
-
+ debugger;
   var passwordResetKey = req.params.passwordResetKey;
   var newPassword = req.params.password;
   var phone = req.params.phone;
@@ -475,6 +476,7 @@ exports.passwordReset = function(req, res, next){
   User
     .findOne({'phone' : phone  , "passwordKeyValidTill": {'$gte': Date.now()}})
     .exec(function(err, user) {
+      console.log(user);
       if (err) {
         console.log("User not found: " + err);
         return next(new Response.respondWithData("failed","User doesn't have password reset request"));
@@ -486,13 +488,14 @@ exports.passwordReset = function(req, res, next){
         return next(new restify.InvalidArgumentError("Invalid key"));
       } else {
         user.password= newPassword;
+        console.log("user pwd" +user.password);
         user.save(function(err, user) {
           if (err) {
             console.log(user.passwordResetKey);
             console.log(PasswordKey);
             return next(new restify.InternalError("failed","Unable to update password: " + err.message));
           }
-          return next(res.send(200, {ok: true }));
+          return next(res.send(200, {user: user }));
         });
       }
     });

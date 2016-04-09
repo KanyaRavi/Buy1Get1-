@@ -243,7 +243,7 @@ userSchema.methods.update = function (updates, options, cb) {
   if (typeof options !== 'object' && typeof options === 'function') {
     cb = options;
   }
-  var editableFields = ['name', 'email', 'phone', '_password', 'deals' , 'settings',  'location',];
+  var editableFields = ['name', 'email', 'phone', 'password', 'deals' , 'settings',  'location',];
   editableFields.forEach(function (field) {
     if (typeof field === 'string' && updates[field] !== undefined) {
       userToUpdate[field] = updates[field];
