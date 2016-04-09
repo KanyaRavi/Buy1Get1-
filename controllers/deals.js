@@ -15,6 +15,7 @@ _ = require('lodash');
 exports.postDeal = function(req, res, next){
   var Deal = mongoose.model('deal');
   var dealObj = req.params.deal;
+  var radius = req.params.radius;
   var user = req.user;
   var newDeal = new Deal(dealObj);
   console.log(dealObj);
