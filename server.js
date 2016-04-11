@@ -79,12 +79,6 @@ function start(cb) {
       });
       // Load the routes
       require("./route")(app);
-/*/
-      //probable source of memleaks by manifold `setTimeout`s
-      scheduler.init();
-//*/
-      // ... and ... ACTION!
-
       app.listen(process.env.PORT || 3000, function (err) {
         console.log(" %s listening at %s", app.name, app.url);
         cb(err);

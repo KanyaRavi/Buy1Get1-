@@ -30,7 +30,6 @@ exports.signup = function (req, res, next) {
        res.send(new restify.InternalError("Error looking up user"));
        return next();
      }
-     registeringUser.verified = true
      User.create(registeringUser, function (err, newUser) {
        if (err) {
          errors.processError(err, req, res);
@@ -330,25 +329,27 @@ exports.logout = function(req, res, next) {
      exports.updateById = updateById;
 
   exports.changePassword = function(req, res, next){
+    debugger;
     var incomingUser = req.user;
     var user = req.body.user;
     console.log(incomingUser + "Got new" + user);
+
     if (typeof user.new === 'undefined' || user.new === "") {
       res.send(new Response.respondWithData("New password is missing"));
       return next();
      }
 
-  User.findById(user.id, function(err, consumer){
-    console.log("got consumer:" +consumer);
+  User.findById(user._id, function(err, user){
+    console.log("got user:" +user);
    if(err){
       res.send(new Response.respondWithData("Error looking up user"));
       return next();
-   } else if(consumer){
-        if(consumer.password == user.old){
-        User.update({'_id':user.id},{
+   } else {
+        if(user.password == user.old){
+        User.update({'_id':user._id},{
         password: user.new
       }, function(err, result){
-          //console.log(password);
+          console.log("new pwd update");
            if(err){
              res.send(new Response.respondWithData('failed', 'Error updating password'));
             return next();
@@ -361,10 +362,7 @@ exports.logout = function(req, res, next) {
          res.send(new Response.respondWithData('failed', 'Old password incorrect'));
          return next();
        }
-    } else {
-        res.send(new Response.respondWithData('failed', 'Incorrect Email'));
-        return next();
-   }
+    }
     })
  }
 
@@ -435,7 +433,7 @@ exports.forgotPasswordReq = function(req, res, next){
 
   var phone = req.params.phone;
   var validDate =  new Date();
-  
+
   User
     .findOne({'phone' : phone })
     .exec(function(err, user) {
@@ -495,7 +493,7 @@ exports.passwordReset = function(req, res, next){
             console.log(PasswordKey);
             return next(new restify.InternalError("failed","Unable to update password: " + err.message));
           }
-          return next(res.send(200, {user: user }));
+            return next(res.send(200, {ok: true }));
         });
       }
     });
