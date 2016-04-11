@@ -53,6 +53,7 @@ exports.signup = function (req, res, next) {
 
 
 exports.login = function (req, res, next) {
+  debugger;
   var phone = req.body.phone;
   var password = req.body.password;
 
@@ -92,7 +93,7 @@ var createNewSession = function (phone, password, callback) {
       }
 
       // Compare passwords
-      if (!user.password(password)) {
+      if (user.password != password) {
         // Wrong passwowrd
         return callback({message: "Wrong password"});
       }
@@ -190,7 +191,7 @@ exports.logout = function(req, res, next) {
     var logname = registeringUser.email;
     registeringUser.name = logname.split("@")[0];
 
-    if(registeringUser.type == 'google'){
+     if(registeringUser.type == 'google'){
     registeringUser.googleId = registeringUser.socialId;
     registeringUser.password = registeringUser.email;
       } else if(registeringUser.type == 'facebook'){
@@ -329,48 +330,92 @@ exports.logout = function(req, res, next) {
      exports.updateById = updateById;
 
   exports.changePassword = function(req, res, next){
-    debugger;
     var incomingUser = req.user;
     var user = req.body.user;
-    console.log(incomingUser + "Got new" + user);
-
-    if (typeof user.new === 'undefined' || user.new === "") {
-      res.send(new Response.respondWithData("New password is missing"));
-      return next();
-     }
-
-  User.findById(user._id, function(err, user){
-    console.log("got user:" +user);
-   if(err){
-      res.send(new Response.respondWithData("Error looking up user"));
-      return next();
-   } else {
-        if(user.password == user.old){
-        User.update({'_id':user._id},{
-        password: user.new
-      }, function(err, result){
-          console.log("new pwd update");
-           if(err){
-             res.send(new Response.respondWithData('failed', 'Error updating password'));
+    console.log(incomingUser + "Got user" + user);
+    if(incomingUser.password == user.old){
+        var oldUser = incomingUser;
+        console.log("old" + oldUser);
+        oldUser.password = user.new;
+        console.log(oldUser.password);
+        oldUser.save(function(err, result){
+          if(err){
+            res.send(new Response.respondWithData('failed', 'Error updating password'));
             return next();
-           } else {
-             res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
-             return next();
+          } else {
+            res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
+            return next();
           }
-       })
-     } else {
-         res.send(new Response.respondWithData('failed', 'Old password incorrect'));
-         return next();
-       }
+        })
+    } else {
+      res.send(new Response.respondWithData('failed', 'Incorrect old password'));
+      return next();
     }
-    })
- }
+  }
+
+  /*  var user = req.body.user;
+    console.log("got");
+      if (typeof user.new === 'undefined' || user.new === "") {
+        res.send(new Response.respondWithData("New password is missing"));
+        return next();
+      }
+
+      User.findById(user.id, function(err, user){
+        console.log(user);
+        if(err){
+          res.send(new Response.respondWithData("Error looking up user"));
+          return next();
+        } else if(user){
+            if(user._password == user.old){
+              user.update({'_id':user.id},{
+              password: user.new
+            }, function(err, result){
+              if(err){
+                res.send(new Response.respondWithData('failed', 'Error updating password'));
+                return next();
+              } else {
+                res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
+                return next();
+              }
+            })
+            } else {
+              res.send(new Response.respondWithData('failed', 'Incorrect old password'));
+              return next();
+            }
+        } else {
+          res.send(new Response.respondWithData('failed', 'Incorrect Email'));
+          return next();
+        }
+      })
+    }*/
+  /*var incomingUser = req.user;
+  var user = req.body.user;
+  console.log(incomingUser + "Got user" + user);
+  if(incomingUser.password == user.old){
+      var oldUser = incomingUser;
+      console.log("old" + oldUser);
+      oldUser.password = user.new;
+      console.log(oldUser.password);
+      oldUser.save(function(err, result){
+        if(err){
+          res.send(new Response.respondWithData('failed', 'Error updating password'));
+          return next();
+        } else {
+          res.send(new Response.respondWithData('success', 'Your password has been changed successfully'));
+          return next();
+        }
+      })
+  } else {
+    res.send(new Response.respondWithData('failed', 'Incorrect old password'));
+    return next();
+  }
+}*/
 
 exports.settingsUpdate = function (req, res, next){
   var user = req.user;
   var updatedSettings = req.params.user;
   console.log("got ip");
-  // Check if the updatedsettings is empty
+
   if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
     console.log("Error: Empty or no object sent to update user.");
     res.send(new restify.InvalidArgumentError("Empty or no user data sent to update."));
@@ -431,16 +476,13 @@ exports.updateById = updateById;
 
 exports.forgotPasswordReq = function(req, res, next){
 
-  var phone = req.params.phone;
+  var phone = req.body.phone;
   var validDate =  new Date();
 
-  User
-    .findOne({'phone' : phone })
-    .exec(function(err, user) {
-      // Look up the user
+  User.findOne({'phone' : phone },function(err, user) {
       if (err) {
-        console.log("User not found: " + err);
-        return next(new Response.respondWithData('failed','Invalid user'));
+        res.send(new Response.respondWithData('failed','Error looking up user'));
+        return next();
       } else {
         var key = passwordKeyGen();
         user.passwordResetKey = key;
@@ -448,7 +490,7 @@ exports.forgotPasswordReq = function(req, res, next){
         user.save(function(err){
           if (err) {
             console.log("Error reset the key");
-            return next(new restify.InternalError("Error reset the key: "));
+            return next(new Response.respondWithData('failed','Error reset the key: '));
           }
           return next(res.send(200, {"key" :key, message: "Password has to be reset in 1 days"}));
         });

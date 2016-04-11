@@ -28,6 +28,7 @@ var dealSchema = new mongoose.Schema({
   expiry:{
     type: Date
   },
+
   comments:{
     type: String
   },
@@ -103,10 +104,7 @@ var userSchema = new mongoose.Schema({
   email:{
     type: String
   },
-  _salt:{
-    type: String
-  },
-  _password: {
+  password: {
     type: String
   },
   _coordinates: {
@@ -162,13 +160,6 @@ userSchema.path('name').validate(function (value) {
   return value && (value.length >= 3 && value.length <= 64);
 }, 'Name should be between 3 and 64 characters long.');
 
-/*userSchema.path('phone').validate(function (value) {
-  return (
-    typeof value === 'string' &&
-      // India
-      (value.substr(0, 3) === '+91' && value.split(value.substr(0, 3))[1].length === 10)
-  );
-}, 'Phone number should belong to India.');*/
 
 userSchema.path('email').validate(function (value) {
   return validator.isEmail(value);
@@ -201,18 +192,6 @@ userSchema.virtual('location').set(function (location) {
   }
 });
 
-userSchema.virtual('password')
-  .get(function () {
-    return function (password) {
-      return (common.sha512(password + this._salt) === this._password);
-    }
-  })
-  .set(function (value) {
-    var salt = common.rand(512);
-    this._salt = salt;
-    this._password = common.sha512(value + salt);
-  });
-
 userSchema.set('toObject', { getters: true, virtuals: true });
 userSchema.set('toJSON', { getters: true, virtuals: true });
 
@@ -243,9 +222,9 @@ userSchema.methods.update = function (updates, options, cb) {
   if (typeof options !== 'object' && typeof options === 'function') {
     cb = options;
   }
-  var editableFields = ['name', 'email', 'phone', 'password', 'deals' , 'settings',  'location',];
+  var editableFields = ['name', 'email', 'phone', 'deals' , 'settings',  'location',];
   editableFields.forEach(function (field) {
-    if (typeof field === 'string' && updates[field] !== undefined) {
+    if (typeof field === 'String' && updates[field] !== undefined) {
       userToUpdate[field] = updates[field];
     }
   });

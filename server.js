@@ -1,24 +1,45 @@
-//Modules
-var restify = require('restify');
-var _ = require('lodash');
-var bunyan = require('bunyan');
-var path = require('path');
-var db = require("./db.js");
+var restify = require('restify'),
+  _ = require('lodash'),
+  db = require("./db.js"),
+  app = restify.createServer({ name: 'Server' }),
+  bunyan = require('bunyan'),
+  domain = require('domain');
 
+// Use domain to catch exceptions
+app.use(function (req, res, next) {
+  var d = domain.create();
+  domain.active = d;
+  d.add(req);
+  d.add(res);
 
-var app = restify.createServer({name: 'Server'});
-app.use(restify.acceptParser(app.acceptable));
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+  d.on('error', function (err) {
+    console.error("Error: " + err.stack);
+    res.send(500, err);
+    next(err);
+  });
+
+  res.on('end', function () {
+    d.dispose();
+  });
+
+  d.run(next);
 });
 
-app.use(restify.queryParser());
+// Use the body parser middleware
 app.use(restify.bodyParser());
 
+// Use the query parser middleware for GET call parameters
+app.use(restify.queryParser());
+
+// Create a bunyan based logger
 var log = bunyan.createLogger({
-  name: 'Buy1Get1',
+  name: 'Buy1Gey1',
+  streams: [
+    {
+      level: 'debug',
+      stream: process.stdout
+    }
+  ],
   serializers: bunyan.stdSerializers
 });
 
@@ -51,8 +72,8 @@ app.get('/' + process.env.LOADERIO_TOKEN + '.txt', function (req, res) {
   return res.send(process.env.LOADERIO_TOKEN);
 });
 
-console.log("Starting up the server");
-console.log("Connecting to MongoDB");
+log.info("Starting up the server");
+log.info("Connecting to MongoDB");
 
 function start(cb) {
   cb = cb || function(err){
@@ -79,8 +100,14 @@ function start(cb) {
       });
       // Load the routes
       require("./route")(app);
+/*/
+      //probable source of memleaks by manifold `setTimeout`s
+      scheduler.init();
+//*/
+      // ... and ... ACTION!
+
       app.listen(process.env.PORT || 3000, function (err) {
-        console.log(" %s listening at %s", app.name, app.url);
+        log.info("Whistle API Server %s listening at %s", app.name, app.url);
         cb(err);
       });
     });
@@ -93,9 +120,9 @@ if (module.parent) {
 }
 
 module.exports.cleanup = function() {
-    console.log("Worker PID#" + process.pid + " stop accepting new connections");
+    log.info("Worker PID#" + process.pid + " stop accepting new connections");
     app.close(function (err) {
-      console.log("Worker PID#" + process.pid + " shutting down!!!");
+      log.info("Worker PID#" + process.pid + " shutting down!!!");
       process.send({cmd: 'suicide'});
     });
 }
