@@ -10,6 +10,8 @@ var errors = require('../helpers/errors.js');
 var common = require('../helpers/common.js');
 var notifications = require('./notifications.js');
 _ = require('lodash');
+var aggregatedistance = 1 / 6371;
+var mdistanceMultiplier = 6371;
 
 
 exports.postDeal = function(req, res, next){
@@ -34,6 +36,124 @@ exports.postDeal = function(req, res, next){
  })
 }
 
+var searchDeal = function (options, callback) {
+
+  // if authenticated, use the user's recorded location
+  if (options.user && options.user.location) {
+    options.location = options.user.location;
+  }
+
+  User.aggregate([
+    {
+      $geoNear: {
+        near: options.location.coordinates,
+        //  minDistance : 1/aggregatedistance,
+        maxDistance: (options.radius / mdistanceMultiplier),
+        "spherical": true,
+        "distanceField": "dis",
+        "distanceMultiplier": mdistanceMultiplier,
+        limit: parseInt(process.env.GEOSEARCH_LIMIT) || 1024
+      }
+    },
+    {
+      $unwind: "$deals"
+    },
+    {
+      $project: {
+        location: {
+          type: {$literal: "Point"},
+          coordinates: "$_coordinates"
+        },
+        deals: {
+          "shopName": "$shopName",
+          "deal": "$deal",
+          "price": "$price",
+          "start": "$start",
+          "end": "$end",
+          "expiry": "$expiry",
+          "accepted": "$accepted",
+          "rejected": "$rejected"
+        },
+      }
+    },
+    {
+      $limit: options.limit
+    }
+  ], function (err, users) {
+    if (err) {
+      callback(err);
+    } else {
+      // Hashing
+      // Generate hash for new results
+      var newHash = common.sha512(JSON.stringify(users));
+      callback(null, users, newHash);
+    }
+  });
+};
+
+exports.getDeals = function (req, res, next) {
+  // Validate the parameters
+  if (typeof req.params.radius === 'undefined') {
+    res.send(new restify.InvalidArgumentError("'radius' missing."));
+    return next();
+  }
+  if (!validator.isFloat(req.params.radius)) {
+    res.send(new restify.InvalidArgumentError("'radius' should be a valid decimal number."));
+    return next();
+  }
+  var radius = validator.toFloat(req.params.radius);
+  if (radius <= 0) {
+    res.send(new restify.InvalidArgumentError("'radius' should be more than zero."));
+    return next();
+  }
+
+  if (typeof req.params.limit === 'undefined') {
+    res.send(new restify.InvalidArgumentError("'limit' missing."));
+    return next();
+  }
+  if (!validator.isInt(req.params.limit)) {
+    res.send(new restify.InvalidArgumentError("'limit' should be a valid integer."));
+    return next();
+  }
+  var limit = validator.toInt(req.params.limit);
+  if (limit <= 0) {
+    res.send(new restify.InvalidArgumentError("'limit' should be more than zero."));
+    return next();
+  }
+
+  // Fetch the search results
+  searchForWhistles({
+    user: req.user,
+    radius: radius,
+    limit: limit
+  }, function (err, matchingDeals, resultHash) {
+    if (err) {
+      req.log.error("Error finding matching whistles");
+      return next(new restify.InternalError(err.message));
+    } else {
+      if (!matchingWhistles) {
+        req.log.info("Couldn't find matching whistles");
+        return next(new restify.ResourceNotError(err.message));
+      } else {
+        if (req.params.prevHash && (req.params.prevHash === resultHash)) {
+          res.send(304);
+          return next();
+        } else {
+          var results = {
+            matchingDeals: matchingDeals,
+            resultHash: resultHash,
+            criteria: {
+              radius: radius,
+              limit: limit,
+              location: req.user._coordinates
+            }
+          };
+          return next(res.send(results));
+        }
+      }
+    }
+  });
+};
 
 exports.getHistory = function (req, res, next) {
   if (req.params.id) {

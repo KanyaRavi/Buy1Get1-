@@ -22,7 +22,8 @@ module.exports = function (app){
   app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
   app.post('/api/user/passwordReset', authController.passwordReset);
   app.post('/api/user/forgotpasswordReq', authController.forgotPasswordReq);
-  app.post('/api/deal/postdeal',needsAuth,dealController.postDeal);
+  app.post('/api/deal/postdeal',needsAuth, dealController.postDeal);
+  app.get('/api/deal/getdeal',needsAuth, dealController.getDeals)
 }
 
 function needsAuth(req, res, next) {
