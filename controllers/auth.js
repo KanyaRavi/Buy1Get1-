@@ -9,6 +9,7 @@ var errors = require('../helpers/errors.js');
 var common = require('../helpers/common.js');
 var notifications = require('./notifications.js');
 
+//User Signup
 exports.signup = function (req, res, next) {
   var registeringUser = req.params.user;
   console.log("got data");
@@ -51,7 +52,7 @@ exports.signup = function (req, res, next) {
  }
 
 
-
+//Login into app
 exports.login = function (req, res, next) {
   debugger;
   var phone = req.body.phone;
@@ -111,6 +112,7 @@ var createNewSession = function (phone, password, callback) {
     });
 };
 
+//logout of the app
 exports.logout = function(req, res, next) {
   req.user.accessToken = '';
   req.user.save(function(err) {
@@ -124,6 +126,7 @@ exports.logout = function(req, res, next) {
   });
  };
 
+//Login with facebook and google
  exports.socialLogin = function(req, res, next){
    var registeringUser = req.body.user;
    console.log("got");
@@ -234,79 +237,45 @@ exports.logout = function(req, res, next) {
   }
 }
 
- exports.forgotPassword = function(req, res, next){
-       var user = req.body.user;
-       console.log("got");
-      User.findOne({'phone':user.phone}, function(err, User){
-        console.log("found");
-         if(err){
-           res.send(new Response.respondWithData("failed","Error looking up user"));
-           return next();
-         } else if(User){
-             var pass = User.password;
-             console.log(pass);
-             notifications.sendPassword(user.phone, pass, function(err, result){
-               if(err){
-                 res.send( new Response.respondWithData('failed', 'Error sending password'));
-                 return next();
-               } else {
-                 console.log("sucess");
-                 res.send(new Response.respondWithData('success', 'Password sent to your mobile'));
-                 return next();
-               }
-             });
-         } else {
-           console.log("incorrect");
-           res.send(new Response.respondWithData('failed', 'Incorrect Mobile'));
-           return next();
-         }
-       })
-     }
-
-   exports.updateProfile = function (req, res, next) {
-       var user = req.user;
-       for(i=0;i<=2;i++){
-       var data = req.body.user;
-       console.log(data[0]);
-       console.log(data[1]);
-     }
-       console.log(user +"Got ip" );
-       // Check if the updatedProfile is empty
-       if (!data || Object.keys(data).length === 0) {
-         console.log("Error: Empty or no object sent to update user.");
-         res.send(new restify.InvalidArgumentError("failed","Empty or no user data sent to udpate."));
-         return next();
+//Updating user profile
+exports.updateProfile = function (req, res, next) {
+   var user = req.user;
+   var data = req.body.user;
+   console.log(user +"Got ip" );
+  // Check if the updatedProfile is empty
+    if (!data || Object.keys(data).length === 0) {
+       console.log("Error: Empty or no object sent to update user.");
+       res.send(new restify.InvalidArgumentError("failed","Empty or no user data sent to udpate."));
+       return next();
        }
 
-       if (typeof data.location !== 'undefined') {
-         try {
+    if (typeof data.location !== 'undefined') {
+       try {
            user.location = common.formatLocation(data.location);
          } catch (e) {
            console.log("invalid location");
            res.send(new restify.InvalidArgumentError(e.message));
            return next();
          }
-       }
-
-       user.update(data, function(err, user) {
-         if (err) {
+     }
+   user.update(data, function(err, user) {
+     if (err) {
            errors.processError(err, req, res);
-         } else {
+       } else {
            console.log("updated!");
            res.send(200, {user: user});
            return next();
          }
-       });
-     };
+     });
+ };
 
-     var updateById = function (userId, updates, callback) {
-
-       req.db.mongoose.model("user").findById(userId, function(err, user) {
-         Object.keys(updates).forEach(function(item) {
-           // Some properties cannot be modified this way
-           /* @TODO Should this disallow other properties from being updated?
+ var updateById = function (userId, updates, callback) {
+   req.db.mongoose.model("user").findById(userId, function(err, user) {
+   Object.keys(updates).forEach(function(item) {
+     // Some properties cannot be modified this way
+     /* @TODO Should this disallow other properties from being updated?
             *
-           var immutableProperties = ['accessToken', 'password];
+     var immutableProperties = ['accessToken', 'password];
            if (immutableProperties.indexOf(item) !== -1){
              return;
            }
@@ -314,10 +283,10 @@ exports.logout = function(req, res, next) {
            // Others can be modified
             */
            user[item] = updates[item];
-         });
+     });
 
-         user.save(function(err, user) {
-           if (callback) {
+       user.save(function(err, user) {
+         if (callback) {
              callback(err, user);
            } else if (err) {
              return false;
@@ -326,9 +295,10 @@ exports.logout = function(req, res, next) {
            }
          });
        });
-     };
-     exports.updateById = updateById;
+  };
+ exports.updateById = updateById;
 
+//Changing user password
   exports.changePassword = function(req, res, next){
     var incomingUser = req.user;
     var user = req.body.user;
@@ -353,6 +323,7 @@ exports.logout = function(req, res, next) {
     }
   }
 
+//Updating the user settinngs
 exports.settingsUpdate = function (req, res, next){
   var user = req.user;
   var data = req.params.user;
@@ -415,16 +386,16 @@ var updateById = function (userId, updates, callback) {
 };
 exports.updateById = updateById;
 
-
+//Requesting for key while forgetting password
 exports.forgotPasswordReq = function(req, res, next){
-
+debugger;
   var phone = req.body.phone;
   var validDate =  new Date();
 
   User.findOne({'phone' : phone },function(err, user) {
       if (err) {
-        res.send(new Response.respondWithData('failed','Error looking up user'));
-        return next();
+      //  res.send(new Response.respondWithData('failed','Error looking up user'));
+        return next(err);
       } else {
         var key = passwordKeyGen();
         user.passwordResetKey = key;
@@ -438,7 +409,7 @@ exports.forgotPasswordReq = function(req, res, next){
         });
       }
     });
-};
+}
 
 function passwordKeyGen() {
   var text = "";
@@ -449,6 +420,7 @@ function passwordKeyGen() {
   return text;
 }
 
+//Resetting the password using key
 exports.passwordReset = function(req, res, next){
  debugger;
   var passwordResetKey = req.params.passwordResetKey;
@@ -483,12 +455,13 @@ exports.passwordReset = function(req, res, next){
     });
 };
 
+//Updating the current location of user
 exports.currentLocation = function (req, res, next){
   debugger;
   var incomingUser = req.user;
   var data = req.params.user;
   console.log("got data");
-  
+
   if (typeof data.location !== 'undefined') {
    try {
      data.location = common.formatLocation(data.location);

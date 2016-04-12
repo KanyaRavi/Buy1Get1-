@@ -1,9 +1,9 @@
-var restify = require('restify'),
-  _ = require('lodash'),
-  db = require("./db.js"),
-  app = restify.createServer({ name: 'Server' }),
-  bunyan = require('bunyan'),
-  domain = require('domain');
+var restify = require('restify');
+var  _ = require('lodash');
+var  db = require("./db.js");
+var  app = restify.createServer({ name: 'Buyone-dev Server' });
+var  bunyan = require('bunyan');
+var  domain = require('domain');
 
 // Use domain to catch exceptions
 app.use(function (req, res, next) {
@@ -33,7 +33,7 @@ app.use(restify.queryParser());
 
 // Create a bunyan based logger
 var log = bunyan.createLogger({
-  name: 'Buy1Gey1',
+  name: 'Buy1Get1',
   streams: [
     {
       level: 'debug',
@@ -51,25 +51,6 @@ app.on('after', function (req, res, route, error) {
   req.log.debug("%s %s", req.headers['Authorization'], req.headers['user-agent']);
   req.log.debug(req.params);
   req.log.debug("%d %s", res.statusCode, res._data ? res._data.length : null);
-});
-
-app.get('/testclient', function (req, res, next) {
-  require('fs').readFile(__dirname + '/public/index.html', function (err, data) {
-    if (err) {
-      next(err);
-      return;
-    }
-
-    res.setHeader('Content-Type', 'text/html');
-    res.writeHead(200);
-    res.end(data);
-    next();
-  });
-});
-
-app.get('/' + process.env.LOADERIO_TOKEN + '.txt', function (req, res) {
-  res.setHeader('Content-Type', 'text/plain');
-  return res.send(process.env.LOADERIO_TOKEN);
 });
 
 log.info("Starting up the server");
@@ -107,7 +88,7 @@ function start(cb) {
       // ... and ... ACTION!
 
       app.listen(process.env.PORT || 3000, function (err) {
-        log.info("Whistle API Server %s listening at %s", app.name, app.url);
+        log.info(" %s listening at %s", app.name, app.url);
         cb(err);
       });
     });

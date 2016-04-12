@@ -9,11 +9,11 @@ var Response = require('../helpers/response.js');
 var errors = require('../helpers/errors.js');
 var common = require('../helpers/common.js');
 var notifications = require('./notifications.js');
-_ = require('lodash');
+var _ = require('lodash');
 var aggregatedistance = 1 / 6371;
 var mdistanceMultiplier = 6371;
 
-
+//Posting a new deal
 exports.postDeal = function(req, res, next){
   var Deal = mongoose.model('deal');
   var dealObj = req.params.deal;
@@ -89,7 +89,7 @@ var searchDeal = function (options, callback) {
     }
   });
 };
-
+//Searching nearby deals
 exports.getDeals = function (req, res, next) {
   // Validate the parameters
   if (typeof req.params.radius === 'undefined') {
@@ -155,6 +155,7 @@ exports.getDeals = function (req, res, next) {
   });
 };
 
+//Fetching deal history
 exports.getHistory = function (req, res, next) {
   if (req.params.id) {
     // Validate the id

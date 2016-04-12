@@ -13,7 +13,6 @@ module.exports = function (app){
   app.post('/api/user/login',authController.login);
   app.del('/api/user/logout',needsAuth,authController.logout);
   app.post('/api/user/sociallogin',authController.socialLogin);
-  app.post('/api/user/forgotpassword',authController.forgotPassword);
   app.post('/api/user/updateprofile', needsAuth, authController.updateProfile);
   app.post('/api/user/changepassword',needsAuth, authController.changePassword);
   app.post('/api/user/settingsupdate',needsAuth,authController.settingsUpdate);
