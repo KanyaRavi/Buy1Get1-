@@ -47,7 +47,6 @@ var searchDeal = function (options, callback) {
     {
       $geoNear: {
         near: options.location.coordinates,
-        //  minDistance : 1/aggregatedistance,
         maxDistance: (options.radius / mdistanceMultiplier),
         "spherical": true,
         "distanceField": "dis",
@@ -120,9 +119,9 @@ exports.getDeals = function (req, res, next) {
     res.send(new restify.InvalidArgumentError("'limit' should be more than zero."));
     return next();
   }
-
+  console.log("fetching");
   // Fetch the search results
-  searchForWhistles({
+  searchDeal({
     user: req.user,
     radius: radius,
     limit: limit
@@ -131,7 +130,8 @@ exports.getDeals = function (req, res, next) {
       req.log.error("Error finding matching whistles");
       return next(new restify.InternalError(err.message));
     } else {
-      if (!matchingWhistles) {
+      console.log("matching");
+      if (!matchingDeals) {
         req.log.info("Couldn't find matching whistles");
         return next(new restify.ResourceNotError(err.message));
       } else {
@@ -179,7 +179,7 @@ exports.getHistory = function (req, res, next) {
 exports.updateDeal = function(req, res, next){
   var user = req.user;
   var updatedDeal = req.params.user;
-  console.log("got ");
+  console.log ("got ");
   // Check if the updatedProfile is empty
   if (!updatedDeal || Object.keys(updatedDeal).length === 0) {
     console.log("Error: Empty or no object sent to update user.");

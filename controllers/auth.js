@@ -266,21 +266,21 @@ exports.logout = function(req, res, next) {
    exports.updateProfile = function (req, res, next) {
        var user = req.user;
        for(i=0;i<=2;i++){
-       var updatedSettings = req.body.user;
-       console.log(updatedSettings[0]);
-       console.log(updatedSettings[1]);
+       var data = req.body.user;
+       console.log(data[0]);
+       console.log(data[1]);
      }
        console.log(user +"Got ip" );
        // Check if the updatedProfile is empty
-       if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
+       if (!data || Object.keys(data).length === 0) {
          console.log("Error: Empty or no object sent to update user.");
          res.send(new restify.InvalidArgumentError("failed","Empty or no user data sent to udpate."));
          return next();
        }
 
-       if (typeof updatedSettings.location !== 'undefined') {
+       if (typeof data.location !== 'undefined') {
          try {
-           user.location = common.formatLocation(updatedSettings.location);
+           user.location = common.formatLocation(data.location);
          } catch (e) {
            console.log("invalid location");
            res.send(new restify.InvalidArgumentError(e.message));
@@ -288,7 +288,7 @@ exports.logout = function(req, res, next) {
          }
        }
 
-       user.update(updatedSettings, function(err, user) {
+       user.update(data, function(err, user) {
          if (err) {
            errors.processError(err, req, res);
          } else {
@@ -355,18 +355,18 @@ exports.logout = function(req, res, next) {
 
 exports.settingsUpdate = function (req, res, next){
   var user = req.user;
-  var updatedSettings = req.params.user;
+  var data = req.params.user;
   console.log("got ip");
 
-  if (!updatedSettings || Object.keys(updatedSettings).length === 0) {
+  if (!data || Object.keys(data).length === 0) {
     console.log("Error: Empty or no object sent to update user.");
     res.send(new restify.InvalidArgumentError("Empty or no user data sent to update."));
     return next();
   }
 
-  if (typeof updatedSettings.location !== 'undefined') {
+  if (typeof data.location !== 'undefined') {
     try {
-      updatedSettings.location = common.formatLocation(updatedSettings.location);
+      data.location = common.formatLocation(data.location);
     } catch (e) {
       console.log("invalid location");
       res.send(new restify.InvalidArgumentError(e.message));
@@ -374,7 +374,7 @@ exports.settingsUpdate = function (req, res, next){
     }
   }
 
-  user.update(updatedSettings, function(err, user) {
+  user.update(data, function(err, user) {
     if (err) {
       errors.processError(err, req, res);
     } else {
@@ -482,3 +482,32 @@ exports.passwordReset = function(req, res, next){
       }
     });
 };
+
+exports.currentLocation = function (req, res, next){
+  debugger;
+  var incomingUser = req.user;
+  var data = req.params.user;
+  console.log("got data");
+  
+  if (typeof data.location !== 'undefined') {
+   try {
+     data.location = common.formatLocation(data.location);
+   } catch (e) {
+     console.log("invalid location");
+     res.send(new restify.InvalidArgumentError(e.message));
+     return next();
+   }
+ }
+  var result = incomingUser;
+  result.location = data.location;
+  result.save(function(err,user){
+    console.log(user.name+ user.location);
+    if(err){
+           res.send(new Response.respondWithData('failed', 'Error updating location'));
+           return next();
+         } else {
+           res.send(200,{user: user});
+           return next();
+         }
+       })
+}
