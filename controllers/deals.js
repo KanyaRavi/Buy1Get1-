@@ -50,7 +50,8 @@ var searchDeal = function (options, callback) {
         maxDistance: (options.radius / mdistanceMultiplier),
         "spherical": true,
         "distanceField": "dis",
-        "distanceMultiplier": mdistanceMultiplier
+        "distanceMultiplier": mdistanceMultiplier,
+        limit: parseInt(process.env.GEOSEARCH_LIMIT) || 1024
       }
     },
     {
@@ -73,6 +74,9 @@ var searchDeal = function (options, callback) {
           "rejected": "$rejected"
         },
       }
+    },
+    {
+      $limit: options.limit
     }
   ], function (err, users) {
     if (err) {
@@ -101,11 +105,26 @@ exports.getDeals = function (req, res, next) {
     res.send(new restify.InvalidArgumentError("'radius' should be more than zero."));
     return next();
   }
+
+  if (typeof req.params.limit === 'undefined') {
+    res.send(new restify.InvalidArgumentError("'limit' missing."));
+    return next();
+  }
+  if (!validator.isInt(req.params.limit)) {
+    res.send(new restify.InvalidArgumentError("'limit' should be a valid integer."));
+    return next();
+  }
+  var limit = validator.toInt(req.params.limit);
+  if (limit <= 0) {
+    res.send(new restify.InvalidArgumentError("'limit' should be more than zero."));
+    return next();
+  }
   console.log("fetching");
   // Fetch the search results
   searchDeal({
     user: req.user,
-    radius: radius
+    radius: radius,
+    limit: limit
   }, function (err, matchingDeals, resultHash) {
     if (err) {
       req.log.error("Error finding matching whistles");
@@ -125,6 +144,7 @@ exports.getDeals = function (req, res, next) {
             resultHash: resultHash,
             criteria: {
               radius: radius,
+              limit: limit,
               location: req.user._coordinates
             }
           };
