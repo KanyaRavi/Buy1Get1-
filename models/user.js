@@ -161,6 +161,7 @@ userSchema.path('name').validate(function (value) {
 }, 'Name should be between 3 and 64 characters long.');
 
 
+
 userSchema.path('email').validate(function (value) {
   return validator.isEmail(value);
 }, 'Invalid email');

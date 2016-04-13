@@ -50,8 +50,7 @@ var searchDeal = function (options, callback) {
         maxDistance: (options.radius / mdistanceMultiplier),
         "spherical": true,
         "distanceField": "dis",
-        "distanceMultiplier": mdistanceMultiplier,
-        limit: parseInt(process.env.GEOSEARCH_LIMIT) || 1024
+        "distanceMultiplier": mdistanceMultiplier
       }
     },
     {
@@ -74,9 +73,6 @@ var searchDeal = function (options, callback) {
           "rejected": "$rejected"
         },
       }
-    },
-    {
-      $limit: options.limit
     }
   ], function (err, users) {
     if (err) {
@@ -105,26 +101,11 @@ exports.getDeals = function (req, res, next) {
     res.send(new restify.InvalidArgumentError("'radius' should be more than zero."));
     return next();
   }
-
-  if (typeof req.params.limit === 'undefined') {
-    res.send(new restify.InvalidArgumentError("'limit' missing."));
-    return next();
-  }
-  if (!validator.isInt(req.params.limit)) {
-    res.send(new restify.InvalidArgumentError("'limit' should be a valid integer."));
-    return next();
-  }
-  var limit = validator.toInt(req.params.limit);
-  if (limit <= 0) {
-    res.send(new restify.InvalidArgumentError("'limit' should be more than zero."));
-    return next();
-  }
   console.log("fetching");
   // Fetch the search results
   searchDeal({
     user: req.user,
-    radius: radius,
-    limit: limit
+    radius: radius
   }, function (err, matchingDeals, resultHash) {
     if (err) {
       req.log.error("Error finding matching whistles");
@@ -144,7 +125,6 @@ exports.getDeals = function (req, res, next) {
             resultHash: resultHash,
             criteria: {
               radius: radius,
-              limit: limit,
               location: req.user._coordinates
             }
           };
@@ -161,15 +141,13 @@ exports.getHistory = function (req, res, next) {
     // Validate the id
     var id = req.params.id;
     console.log("got id");
-    Deal.findOne({ 'deals._id': id })
+    User.findOne({ '_id': id })
       .exec(function (err, user) {
         console.log(user);
       if (err) {
         return next(new Response.respondWithData('failed','Cant find the user'));
       }
-     for(i=0;i<=deals.length;i++){
-     var dealObj = _.filter(user.deals, { id: id })[0];
-      }
+     var dealObj = _.filter(user.deals);
       console.log("user deals:" +user.deals);
       next(res.send(200, dealObj));
 
