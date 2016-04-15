@@ -87,6 +87,7 @@ var searchDeal = function (options, callback) {
 };
 //Searching nearby deals
 exports.getDeals = function (req, res, next) {
+  debugger;
   // Validate the parameters
   if (typeof req.params.radius === 'undefined') {
     res.send(new restify.InvalidArgumentError("'radius' missing."));
@@ -112,14 +113,10 @@ exports.getDeals = function (req, res, next) {
       return next(new restify.InternalError(err.message));
     } else {
       console.log("matching");
-      if (!matchingDeals) {
+     if (!matchingDeals) {
         req.log.info("Couldn't find matching whistles");
         return next(new restify.ResourceNotError(err.message));
-      } else {
-        if (req.params.prevHash && (req.params.prevHash === resultHash)) {
-          res.send(304);
-          return next();
-        } else {
+      }  else {
           var results = {
             matchingDeals: matchingDeals,
             resultHash: resultHash,
@@ -131,8 +128,7 @@ exports.getDeals = function (req, res, next) {
           return next(res.send(results));
         }
       }
-    }
-  });
+    });
 };
 
 //Fetching deal history
