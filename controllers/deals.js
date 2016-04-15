@@ -36,6 +36,7 @@ exports.postDeal = function(req, res, next){
  })
 }
 
+
 var searchDeal = function (options, callback) {
 
   // if authenticated, use the user's recorded location
@@ -50,7 +51,8 @@ var searchDeal = function (options, callback) {
         maxDistance: (options.radius / mdistanceMultiplier),
         "spherical": true,
         "distanceField": "dis",
-        "distanceMultiplier": mdistanceMultiplier
+        "distanceMultiplier": mdistanceMultiplier,
+        limit: parseInt(process.env.GEOSEARCH_LIMIT) || 1024
       }
     },
     {
@@ -73,6 +75,9 @@ var searchDeal = function (options, callback) {
           "rejected": "$rejected"
         },
       }
+    },
+    {
+      $limit: options.limit
     }
   ], function (err, users) {
     if (err) {
@@ -87,7 +92,6 @@ var searchDeal = function (options, callback) {
 };
 //Searching nearby deals
 exports.getDeals = function (req, res, next) {
-  debugger;
   // Validate the parameters
   if (typeof req.params.radius === 'undefined') {
     res.send(new restify.InvalidArgumentError("'radius' missing."));
@@ -102,33 +106,54 @@ exports.getDeals = function (req, res, next) {
     res.send(new restify.InvalidArgumentError("'radius' should be more than zero."));
     return next();
   }
+
+  if (typeof req.params.limit === 'undefined') {
+    res.send(new restify.InvalidArgumentError("'limit' missing."));
+    return next();
+  }
+  if (!validator.isInt(req.params.limit)) {
+    res.send(new restify.InvalidArgumentError("'limit' should be a valid integer."));
+    return next();
+  }
+  var limit = validator.toInt(req.params.limit);
+  if (limit <= 0) {
+    res.send(new restify.InvalidArgumentError("'limit' should be more than zero."));
+    return next();
+  }
   console.log("fetching");
   // Fetch the search results
   searchDeal({
     user: req.user,
-    radius: radius
+    radius: radius,
+    limit: limit
   }, function (err, matchingDeals, resultHash) {
     if (err) {
       req.log.error("Error finding matching whistles");
       return next(new restify.InternalError(err.message));
     } else {
       console.log("matching");
-     if (!matchingDeals) {
+      if (!matchingDeals) {
         req.log.info("Couldn't find matching whistles");
         return next(new restify.ResourceNotError(err.message));
-      }  else {
+      } else {
+        if (req.params.prevHash && (req.params.prevHash === resultHash)) {
+          res.send(304);
+          return next();
+        } else {
           var results = {
             matchingDeals: matchingDeals,
             resultHash: resultHash,
             criteria: {
               radius: radius,
+              limit: limit,
               location: req.user._coordinates
             }
           };
           return next(res.send(results));
         }
       }
-    });
+    }
+  });
 };
 
 //Fetching deal history
