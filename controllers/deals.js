@@ -59,20 +59,20 @@ var searchDeal = function (options, callback) {
     },
     {
       $project: {
+        deals: {
+          shopName: 1,
+          "deal": 1,
+          price: 1,
+          "start": 1,
+          "end": 1,
+          "expiry": 1,
+          "accepted": 1,
+          "rejected": 1
+        },
         location: {
           type: {$literal: "Point"},
           coordinates: "$_coordinates"
-        },
-        deals: {
-          "shopName": "$shopName",
-          "deal": "$deal",
-          "price": "$price",
-          "start": "$start",
-          "end": "$end",
-          "expiry": "$expiry",
-          "accepted": "$accepted",
-          "rejected": "$rejected"
-        },
+        }
       }
     }
   ], function (err, users) {
