@@ -3,7 +3,7 @@ var restify  = require('restify');
 var validator = require("validator");
 var path = require('path');
 var User = mongoose.model('user');
-var Deal = mongoose.model('deal');
+var Deal = mongoose.model('Deal');
 var bodyParser = require('body-parser');
 var Response = require('../helpers/response.js');
 var errors = require('../helpers/errors.js');
@@ -13,9 +13,15 @@ var _ = require('lodash');
 var aggregatedistance = 1 / 6371;
 var mdistanceMultiplier = 6371;
 
+
+var SearchToQuery = function (dealObj) {
+  var dealSearchObj = {};
+  return dealSearchObj;
+}
+
 //Posting a new deal
 exports.postDeal = function(req, res, next){
-  var Deal = mongoose.model('deal');
+  var Deal = mongoose.model('Deal');
   var dealObj = req.params.deal;
   var radius = req.params.radius;
   var location = req.params._coordinates;
@@ -30,10 +36,35 @@ exports.postDeal = function(req, res, next){
        return next(new restify.InternaError("Error in Deals. Try again. " + err.message));
       } else {
        console.log("Posted deal");
-       res.send(200, data);
-       return next();
      }
- })
+
+    // Search for matching whistlers
+    var SearchQuery =  SearchToQuery(dealObj);
+    searchDeal({
+      user: req.user,
+      radius: radius,
+      query: SearchQuery
+    }, function (err, users) {
+      if (err) {
+        req.log.error(err);
+        return next(new restify.InternalError(err.message));
+      } else {
+        console.log("Found %d matching Deals", users.length);
+        var results = {};
+        if (dealObj === undefined) {
+          results = {
+            matchingDeals: users
+          };
+        } else {
+          results = {
+            newDeal: newDeal,
+            matchingDeals: users
+          };
+        }
+        next(res.send(200, results));
+      }
+    });
+     })
 }
 
 
@@ -61,13 +92,13 @@ var searchDeal = function (options, callback) {
       $project: {
         deals: {
           shopName: 1,
-          "deal": 1,
+          deal: 1,
           price: 1,
-          "start": 1,
-          "end": 1,
-          "expiry": 1,
-          "accepted": 1,
-          "rejected": 1
+          start: 1,
+          end: 1,
+          expiry: 1,
+          accepted: 1,
+          rejected: 1
         },
         location: {
           type: {$literal: "Point"},
@@ -220,7 +251,7 @@ var updateById = function (dealId, updates, callback) {
 };
 exports.updateById = updateById;
 
-
+//Deleting the posted deal
 exports.deleteDeal = function (req, res, next) {
   // Delete a Deal by its id
   var dealId = req.params.dealId;

@@ -24,6 +24,8 @@ module.exports = function (app){
   app.post('/api/deal/postdeal',needsAuth, dealController.postDeal);
   app.get('/api/deal/getdeal',needsAuth, dealController.getDeals);
   app.post('/api/user/currentlocation',needsAuth,  authController.currentLocation);
+  app.get('/api/user/username/:phone',authController.nameDetails);
+  app.post('/api/user/regid',needsAuth, authController.userRegId);
 }
 
 function needsAuth(req, res, next) {

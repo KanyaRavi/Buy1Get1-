@@ -484,3 +484,39 @@ exports.currentLocation = function (req, res, next){
          }
        })
 }
+
+//Fetching user name
+exports.nameDetails = function (req, res, next){
+  var phone = req.params.phone;
+  User
+    .findOne({'phone' : phone})
+    .exec(function(err, user) {
+      console.log(user);
+      if (err) {
+        console.log("User not found: " + err);
+        return next(new Response.respondWithData("failed","User doesn't have password reset request"));
+      }
+    console.log(user.name);
+    res.send(200,{user:user.name});
+    return next();
+  })
+}
+
+//regId
+exports.userRegId = function(req, res, next){
+  var data = req.body.data;
+  var incomingUser = req.user;
+console.log("got"+user);
+  var user = incomingUser;
+  user.regId = data.regId;
+  user.save(function(err,data){
+    console.log(data.regId);
+  if(err){
+         res.send(new Response.respondWithData('failed', 'Error saving regId'));
+         return next();
+       } else {
+         res.send(200,{user: data.regId});
+         return next();
+       }
+     })
+}

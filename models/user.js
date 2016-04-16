@@ -16,7 +16,7 @@ var dealSchema = new mongoose.Schema({
   },
   price:{
     type: Number,
-    required: true
+   required: true
   },
   start:{
     type: Date,
@@ -28,7 +28,6 @@ var dealSchema = new mongoose.Schema({
   expiry:{
     type: Date
   },
-
   comments:{
     type: String
   },
@@ -86,9 +85,6 @@ dealSchema.pre('save', function (next) {
   next(err);
 });
 
-mongoose.model('deal', dealSchema);
-
-
 /*User Schema*/
 
 var userSchema = new mongoose.Schema({
@@ -139,11 +135,11 @@ var userSchema = new mongoose.Schema({
     type:String
   },
   facebookId:{
-        type: String
-      },
+    type: String
+  },
   googleId:{
-        type: String
-      },
+    type: String
+  },
   regId: {
    type: String
  },
@@ -214,7 +210,8 @@ userSchema.methods.toJSON = function () {
     createdAt: this.createdAt,
     accessToken: this.accessToken,
     facebookId : this.facebookId,
-    googleId:this.googleId
+    googleId:this.googleId,
+    regId: this.regId
   };
 };
 
@@ -223,7 +220,7 @@ userSchema.methods.update = function (updates, options, cb) {
   if (typeof options !== 'object' && typeof options === 'function') {
     cb = options;
   }
-  var editableFields = ['name', 'email', 'phone', 'deals' , 'settings',  'location',];
+  var editableFields = ['name', 'email', 'phone', 'deals' , 'settings',  'location', 'regId'];
   editableFields.forEach(function (field) {
     if (typeof field === 'String' && updates[field] !== undefined) {
       userToUpdate[field] = updates[field];
@@ -280,5 +277,5 @@ userSchema.pre('save', function (next) {
   next(err);
 });
 
-mongoose.model('deal', dealSchema);
+mongoose.model('Deal', dealSchema);
 mongoose.model('user', userSchema);
