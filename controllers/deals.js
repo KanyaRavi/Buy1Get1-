@@ -90,6 +90,7 @@ var searchDeal = function (options, callback) {
     },
     {
       $project: {
+        name: 1,
         deals: {
           shopName: 1,
           deal: 1,
@@ -97,6 +98,7 @@ var searchDeal = function (options, callback) {
           start: 1,
           end: 1,
           expiry: 1,
+          comments:1,
           accepted: 1,
           rejected: 1
         },
