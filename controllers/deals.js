@@ -181,9 +181,7 @@ exports.getHistory = function (req, res, next) {
       if (err) {
         return next(new Response.respondWithData('failed','Cant find the user'));
       }
-     for(i=0;i<=deals.length;i++){
-     var dealObj = _.filter(user.deals, { id: id })[0];
-      }
+     var dealObj = _.filter(user.deals);
       console.log("user deals:" +user.deals);
       next(res.send(200, dealObj));
 
@@ -192,66 +190,30 @@ exports.getHistory = function (req, res, next) {
 };
 
 exports.updateDeal = function(req, res, next){
-  var user = req.user;
-  var updatedDeal = req.params.user;
-  console.log ("got ");
-  // Check if the updatedProfile is empty
-  if (!updatedDeal || Object.keys(updatedDeal).length === 0) {
-    console.log("Error: Empty or no object sent to update user.");
-    res.send(new Response.respondWithData("failed","Empty or no user data sent to udpate."));
+
+  var dealObj = _.filter(req.user.deals, { id: req.params.dealId })[0];
+  console.log(dealObj);
+  if (!dealObj) {
+    console.log("Deal not found: " + req.params.dealId);
+    res.send(new restify.ResourceNotFoundError("Deal not found: " + req.params.DealId));
     return next();
   }
 
-  if (typeof updatedDeal.location !== 'undefined') {
-    try {
-      updatedDeal.location = common.formatLocation(updatedDeal.location);
-    } catch (e) {
-      console.log("invalid location");
-      res.send(new Response.respondWithData(e.message));
-      return next();
+  Object.keys(req.params).forEach(function (property) {
+    if (['shopName', 'deal', 'price', 'expiry', 'comments', 'end'].indexOf(property) > -1) {
+      dealObj[property] = req.params[property];
     }
-  }
-
-  user.update(updatedDeal, function(err, user) {
+  });
+  req.user.save(function (err, user) {
     if (err) {
       errors.processError(err, req, res);
     } else {
-      console.log("deal update");
-      res.send(200, {user: user});
+      var updatedDeal = _.filter(req.user.deals, { id: req.params.dealId })[0];
+      res.send({ updatedDeal: updatedDeal });
       return next();
     }
   });
 };
-
-var updateById = function (dealId, updates, callback) {
-
-  req.db.mongoose.model("deal").findById(dealId, function(err, user) {
-    Object.keys(updates).forEach(function(item) {
-      // Some properties cannot be modified this way
-      /* @TODO Should this disallow other properties from being updated?
-       *
-      var immutableProperties = ['accessToken', 'password'];
-      if (immutableProperties.indexOf(item) !== -1){
-        return;
-      }
-
-      // Others can be modified
-       */
-      user[item] = updates[item];
-    });
-
-    user.save(function(err, user) {
-      if (callback) {
-        callback(err, user);
-      } else if (err) {
-        return false;
-      } else {
-        return true;
-      }
-    });
-  });
-};
-exports.updateById = updateById;
 
 //Deleting the posted deal
 exports.deleteDeal = function (req, res, next) {
