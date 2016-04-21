@@ -171,23 +171,21 @@ exports.getDeals = function (req, res, next) {
 
 //Fetching deal history
 exports.getHistory = function (req, res, next) {
-  if (req.params.id) {
-    // Validate the id
-    var id = req.params.id;
-    console.log("got id");
-    Deal.findOne({ 'deals._id': id })
-      .exec(function (err, user) {
-        console.log(user);
-      if (err) {
-        return next(new Response.respondWithData('failed','Cant find the user'));
-      }
-     var dealObj = _.filter(user.deals);
-      console.log("user deals:" +user.deals);
-      next(res.send(200, dealObj));
-
-    });
-  }
-};
+  var incomingUser = req.user;
+  var id = incomingUser._id;
+  User.findById(id,function (err, user){
+    console.log(user);
+    if (err) {
+      return next(new Response.respondWithData('failed','Cant find the user'));
+    }
+    var dealObj = _.filter(user.deals);
+    var data = user.deals;
+    var accepted = data.accepted;
+     console.log("accepted:" + accepted);
+     console.log("user deals:" +dealObj.deal);
+     next(res.send(200, dealObj ));
+  });
+}
 
 exports.updateDeal = function(req, res, next){
 
