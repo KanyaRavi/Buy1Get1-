@@ -16,16 +16,18 @@ module.exports = function (app){
   app.post('/api/user/updateprofile', needsAuth, authController.updateProfile);
   app.post('/api/user/changepassword',needsAuth, authController.changePassword);
   app.post('/api/user/settingsupdate',needsAuth,authController.settingsUpdate);
-  app.post('/api/deal/gethistory',needsAuth,dealController.getHistory);
-  app.put('/api/deal/updatedeal/:dealId', needsAuth, dealController.updateDeal);
-  app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
   app.post('/api/user/passwordReset', authController.passwordReset);
   app.post('/api/user/forgotpasswordReq', authController.forgotPasswordReq);
-  app.post('/api/deal/postdeal',needsAuth, dealController.postDeal);
-  app.get('/api/deal/getdeal',needsAuth, dealController.getDeals);
   app.post('/api/user/currentlocation',needsAuth,  authController.currentLocation);
   app.get('/api/user/username/:phone',authController.nameDetails);
   app.post('/api/user/regid',needsAuth, authController.userRegId);
+  app.post('/api/deal/gethistory',needsAuth,dealController.getHistory);
+  app.put('/api/deal/updatedeal/:dealId', needsAuth, dealController.updateDeal);
+  app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
+  app.post('/api/deal/postdeal',needsAuth, dealController.postDeal);
+  app.get('/api/deal/getdeal',needsAuth, dealController.getDeals);
+  app.put('/api/deal/acceptdeal/:id',needsAuth,dealController.acceptDeal);
+  app.put('/api/deal/rejectdeal/:id',needsAuth,dealController.rejectDeal);
 }
 
 function needsAuth(req, res, next) {

@@ -170,6 +170,42 @@ exports.getDeals = function (req, res, next) {
 };
 
 //Fetching deal history
+var acceptreject = function (userId, callback){
+  console.log("Aggregate:" +userId);
+  if(userId == null && userId == 'undefined'){
+    console.log("error fetching id");
+    res.send(new Response.respondWithData('failed','Invalid userId'));
+    return next();
+  }
+  User.aggregate([
+     {
+       $unwind: "$deals"
+     },
+     {
+      "$match":
+       {
+      "deals.accepted": userId
+      //"deals.rejected": id
+       }
+    },
+    {
+      $project:{
+        "shopName":"$deals.shopName",
+        "deal":"$deals.deal",
+        "price":"$deals.price",
+        "name":"$name"
+      }
+    }
+  ],function (err, user){
+    console.log(user);
+    if (err){
+      callback (err);
+    }
+    console.log("Your accepted deal:"+ user);
+  //  res.send(200,user);
+      callback(null, user);
+  })
+}
 exports.getHistory = function (req, res, next) {
   var incomingUser = req.user;
   var id = incomingUser._id;
@@ -179,11 +215,24 @@ exports.getHistory = function (req, res, next) {
       return next(new Response.respondWithData('failed','Cant find the user'));
     }
     var dealObj = _.filter(user.deals);
-    var data = user.deals;
-    var accepted = data.accepted;
-     console.log("accepted:" + accepted);
-     console.log("user deals:" +dealObj.deal);
-     next(res.send(200, dealObj ));
+     console.log("user deals:" +dealObj);
+     console.log("userid:" +id);
+     acceptreject({
+        userId : id
+     },function(err, users){
+       if(err){
+         res.send(new restify.InternaError(err.message));
+         return next();
+       }
+       else{
+         console.log("final");
+         var final = {
+           accepteddeal: users,
+           mydeal: dealObj
+         }
+         next(res.send(200, final));
+       }
+     });
   });
 }
 
@@ -230,3 +279,96 @@ exports.deleteDeal = function (req, res, next) {
     return next();
   });
 };
+
+exports.acceptDeal = function(req, res, next){
+var incomingUser = req.user;
+  if(req.params.id){
+    var id = req.params.id;
+    var acceptedUser = incomingUser._id;
+    User.findOneAndUpdate(
+      {
+     "deals": {
+      $elemMatch: {
+          _id: id
+         }
+       }
+     }, {
+    "$set": {
+      "deals.$.accepted" : acceptedUser
+     }
+  }, function(err, doc) {
+     console.log(doc);
+     console.log("deals:" + doc.deals);
+     if(err){
+       console.log("User not found");
+       res.send(new restify.ResourceNotFoundError('failed','Deal not found'));
+       return next();
+      }
+      var dealObj = _.filter(doc.deals, { id: id })[0];
+     console.log("Deal Obj" + dealObj);
+     doc.save(function (err, result){
+       console.log("Result:" + result);
+       if(err){
+          console.log("Internal error");
+          res.send(new restifyc.InternalError('failed','Error accepting'));
+          return next();
+        }
+    console.log("saved");
+    res.send(200,{user: result});
+    return next();
+  });
+  });
+  }
+}
+
+
+exports.rejectDeal = function(req, res, next){
+  var incomingUser = req.user;
+  if(req.params.id){
+    var id = req.params.id;
+    var rejectedUser = incomingUser._id;
+    User.findOneAndUpdate(
+      {
+     "deals": {
+      $elemMatch: {
+          _id: id
+         }
+       }
+     }, {
+    "$set": {
+      "deals.$.rejected" : rejectedUser
+     }
+  }, function(err, doc) {
+     console.log(doc);
+     console.log("deals:" + doc.deals);
+     if(err){
+       console.log("User not found");
+       res.send(new restify.ResourceNotFoundError('failed','Deal not found'));
+       return next();
+      }
+      var dealObj = _.filter(doc.deals, { id: id })[0];
+     console.log("Deal Obj" + dealObj);
+     doc.save(function (err, result){
+       console.log("Result:" + result);
+       if(err){
+          console.log("Internal error");
+          res.send(new restifyc.InternalError('failed','Error accepting'));
+          return next();
+        }
+        else{
+          if(result.deals.accepted != rejectedUser){
+            console.log("not same user");
+            res.send(new Response.respondWithData('failed','You doesnot accept the deal'));
+            return next();
+            console.log("saved");
+            res.send(200,{user: result.deals});
+            return next();
+          }
+          console.log("saved");
+          res.send(200,{user: result.deals});
+          return next();
+        }
+  });
+  });
+  }
+}
