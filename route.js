@@ -21,6 +21,7 @@ module.exports = function (app){
   app.post('/api/user/currentlocation',needsAuth,  authController.currentLocation);
   app.get('/api/user/username/:phone',authController.nameDetails);
   app.post('/api/user/regid',needsAuth, authController.userRegId);
+  //Deals
   app.post('/api/deal/gethistory',needsAuth,dealController.getHistory);
   app.put('/api/deal/updatedeal/:dealId', needsAuth, dealController.updateDeal);
   app.del('/api/deal/deletedeal/:dealId', needsAuth, dealController.deleteDeal);
